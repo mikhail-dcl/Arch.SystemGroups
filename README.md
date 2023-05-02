@@ -15,8 +15,6 @@ It is inspired by [Unity Entities' System Groups](https://docs.unity3d.com/Packa
 - Copy `Arch.SystemGroups.dll` into `Plugins` directory of your Unity project.
 - Copy `Arch.SystemGroups.SourceGenerator.dll` into the desired directory of your project, exclude all platforms, add a new Label "RoslynGenerator" to the assembly (see [Unity docs](https://docs.unity3d.com/Manual/roslyn-analyzers.html) for more information)
 
-Build and copy the artifacts into `Plugins` directory of your Unity project.
-
 ## Update In Group
 
 Use the `UpdateInGroup` attribute on the member systems to specify which systems need to be updated in a given group.
