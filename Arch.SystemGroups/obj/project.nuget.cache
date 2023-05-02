@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "IAs8vjBz/LAC6PeEokVL8u5XaulLfPeF28PtIxtRHeZpH+Rusng3UzNdxN3hM4FonpIghavAOjAXifPQU5cRKg==",
+  "success": true,
+  "projectFilePath": "D:\\Decentraland\\ArchECS\\Arch.SystemGroups\\Arch.SystemGroups\\Arch.SystemGroups.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\agapo\\.nuget\\packages\\arch.lowlevel\\1.0.2\\arch.lowlevel.1.0.2.nupkg.sha512",
+    "C:\\Users\\agapo\\.nuget\\packages\\arch.system\\1.0.2\\arch.system.1.0.2.nupkg.sha512"
+  ],
+  "logs": []
+}

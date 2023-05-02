@@ -1,0 +1,3 @@
+is_global = true
+build_property.RootNamespace = Arch.SystemGroups.SourceGenerator
+build_property.ProjectDir = D:\Decentraland\ArchECS\Arch.SystemGroups\Arch.SystemGroups.SourceGenerator\

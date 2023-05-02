@@ -1,0 +1,15 @@
+D:\Decentraland\ArchECS\Arch.SystemGroups\Arch.SystemGroups\obj\Debug\netstandard2.1\Arch.SystemGroups.csproj.AssemblyReference.cache
+D:\Decentraland\ArchECS\Arch.SystemGroups\Arch.SystemGroups\obj\Debug\netstandard2.1\Arch.SystemGroups.GeneratedMSBuildEditorConfig.editorconfig
+D:\Decentraland\ArchECS\Arch.SystemGroups\Arch.SystemGroups\obj\Debug\netstandard2.1\Arch.SystemGroups.AssemblyInfoInputs.cache
+D:\Decentraland\ArchECS\Arch.SystemGroups\Arch.SystemGroups\obj\Debug\netstandard2.1\Arch.SystemGroups.AssemblyInfo.cs
+D:\Decentraland\ArchECS\Arch.SystemGroups\Arch.SystemGroups\obj\Debug\netstandard2.1\Arch.SystemGroups.csproj.CoreCompileInputs.cache
+D:\Decentraland\ArchECS\Arch.SystemGroups\Arch.SystemGroups\bin\Debug\netstandard2.1\Arch.SystemGroups.deps.json
+D:\Decentraland\ArchECS\Arch.SystemGroups\Arch.SystemGroups\bin\Debug\netstandard2.1\Arch.SystemGroups.dll
+D:\Decentraland\ArchECS\Arch.SystemGroups\Arch.SystemGroups\bin\Debug\netstandard2.1\Arch.SystemGroups.pdb
+D:\Decentraland\ArchECS\Arch.SystemGroups\Arch.SystemGroups\bin\Debug\netstandard2.1\UnityEngine.CoreModule.dll
+D:\Decentraland\ArchECS\Arch.SystemGroups\Arch.SystemGroups\bin\Debug\netstandard2.1\UnityEngine.SharedInternalsModule.dll
+D:\Decentraland\ArchECS\Arch.SystemGroups\Arch.SystemGroups\bin\Debug\netstandard2.1\UnityEngine.CoreModule.xml
+D:\Decentraland\ArchECS\Arch.SystemGroups\Arch.SystemGroups\bin\Debug\netstandard2.1\UnityEngine.SharedInternalsModule.xml
+D:\Decentraland\ArchECS\Arch.SystemGroups\Arch.SystemGroups\obj\Debug\netstandard2.1\Arch.SystemGroups.csproj.CopyComplete
+D:\Decentraland\ArchECS\Arch.SystemGroups\Arch.SystemGroups\obj\Debug\netstandard2.1\Arch.SystemGroups.dll
+D:\Decentraland\ArchECS\Arch.SystemGroups\Arch.SystemGroups\obj\Debug\netstandard2.1\Arch.SystemGroups.pdb

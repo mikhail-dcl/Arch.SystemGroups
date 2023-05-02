@@ -1,0 +1,148 @@
+{
+  "version": 3,
+  "targets": {
+    ".NETStandard,Version=v2.1": {
+      "Arch.LowLevel/1.0.2": {
+        "type": "package",
+        "compile": {
+          "lib/netstandard2.1/Arch.LowLevel.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/netstandard2.1/Arch.LowLevel.dll": {
+            "related": ".xml"
+          }
+        }
+      },
+      "Arch.System/1.0.2": {
+        "type": "package",
+        "compile": {
+          "lib/netstandard2.1/Arch.System.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/netstandard2.1/Arch.System.dll": {
+            "related": ".xml"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "Arch.LowLevel/1.0.2": {
+      "sha512": "B36MA88cjI1bBP2IEsjhzgdqwjxi6b8un3sooPmxTjx0egTNGNy4fVp3E0GZFX8YiHmD/cU1JQ6wjXYWg0ee5Q==",
+      "type": "package",
+      "path": "arch.lowlevel/1.0.2",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "arch.lowlevel.1.0.2.nupkg.sha512",
+        "arch.lowlevel.nuspec",
+        "lib/net6.0/Arch.LowLevel.dll",
+        "lib/net6.0/Arch.LowLevel.xml",
+        "lib/net7.0/Arch.LowLevel.dll",
+        "lib/net7.0/Arch.LowLevel.xml",
+        "lib/netstandard2.1/Arch.LowLevel.dll",
+        "lib/netstandard2.1/Arch.LowLevel.xml"
+      ]
+    },
+    "Arch.System/1.0.2": {
+      "sha512": "5hInBPrqH4hbs2Umk6bWSnap9qI1RCSo4Fw/BXiMo11gxm8P1Jy12jDl++knla2UQltGOj2KT2Phuj/0EYBDEQ==",
+      "type": "package",
+      "path": "arch.system/1.0.2",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "arch.system.1.0.2.nupkg.sha512",
+        "arch.system.nuspec",
+        "lib/net6.0/Arch.System.dll",
+        "lib/net6.0/Arch.System.xml",
+        "lib/net7.0/Arch.System.dll",
+        "lib/net7.0/Arch.System.xml",
+        "lib/netstandard2.1/Arch.System.dll",
+        "lib/netstandard2.1/Arch.System.xml"
+      ]
+    }
+  },
+  "projectFileDependencyGroups": {
+    ".NETStandard,Version=v2.1": [
+      "Arch.LowLevel >= 1.0.2",
+      "Arch.System >= 1.0.2"
+    ]
+  },
+  "packageFolders": {
+    "C:\\Users\\agapo\\.nuget\\packages\\": {},
+    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
+  },
+  "project": {
+    "version": "1.0.0",
+    "restore": {
+      "projectUniqueName": "D:\\Decentraland\\ArchECS\\Arch.SystemGroups\\Arch.SystemGroups\\Arch.SystemGroups.csproj",
+      "projectName": "Arch.SystemGroups",
+      "projectPath": "D:\\Decentraland\\ArchECS\\Arch.SystemGroups\\Arch.SystemGroups\\Arch.SystemGroups.csproj",
+      "packagesPath": "C:\\Users\\agapo\\.nuget\\packages\\",
+      "outputPath": "D:\\Decentraland\\ArchECS\\Arch.SystemGroups\\Arch.SystemGroups\\obj\\",
+      "projectStyle": "PackageReference",
+      "fallbackFolders": [
+        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+      ],
+      "configFilePaths": [
+        "C:\\Users\\agapo\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+      ],
+      "originalTargetFrameworks": [
+        "netstandard2.1"
+      ],
+      "sources": {
+        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+        "https://api.nuget.org/v3/index.json": {}
+      },
+      "frameworks": {
+        "netstandard2.1": {
+          "targetAlias": "netstandard2.1",
+          "projectReferences": {}
+        }
+      },
+      "warningProperties": {
+        "warnAsError": [
+          "NU1605"
+        ]
+      }
+    },
+    "frameworks": {
+      "netstandard2.1": {
+        "targetAlias": "netstandard2.1",
+        "dependencies": {
+          "Arch.LowLevel": {
+            "target": "Package",
+            "version": "[1.0.2, )"
+          },
+          "Arch.System": {
+            "target": "Package",
+            "version": "[1.0.2, )"
+          }
+        },
+        "imports": [
+          "net461",
+          "net462",
+          "net47",
+          "net471",
+          "net472",
+          "net48",
+          "net481"
+        ],
+        "assetTargetFallback": true,
+        "warn": true,
+        "frameworkReferences": {
+          "NETStandard.Library": {
+            "privateAssets": "all"
+          }
+        },
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\6.0.408\\RuntimeIdentifierGraph.json"
+      }
+    }
+  }
+}
