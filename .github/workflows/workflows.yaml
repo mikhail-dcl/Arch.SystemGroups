@@ -52,10 +52,11 @@ jobs:
     - name: Restore
       run: dotnet restore
       
-    - name: Install Fuse
+    - name: Install Libs
       run: |
         sudo apt update
         sudo apt install libfuse2
+        sudo apt-get install at-spi2-core
     
     - name: Setup Unity
       uses: kuler90/setup-unity@v1
