@@ -52,6 +52,11 @@ jobs:
     - name: Restore
       run: dotnet restore
       
+    - name: Install Fuse
+      run: |
+        sudo apt update
+        sudo apt install libfuse2
+    
     - name: Setup Unity
       uses: kuler90/setup-unity@v1
       with:
