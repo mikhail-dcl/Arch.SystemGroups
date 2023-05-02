@@ -10,6 +10,11 @@ It is inspired by [Unity Entities' System Groups](https://docs.unity3d.com/Packa
 
 ## Installation
 
+- Make sure Unity 2022.2.9f1 is installed (the project is linked against this version)
+- Create a release build
+- Copy `Arch.SystemGroups.dll` into `Plugins` directory of your Unity project.
+- Copy `Arch.SystemGroups.SourceGenerator.dll` into the desired directory of your project, exclude all platforms, add a new Label "RoslynGenerator" to the assembly (see [Unity docs](https://docs.unity3d.com/Manual/roslyn-analyzers.html) for more information)
+
 Build and copy the artifacts into `Plugins` directory of your Unity project.
 
 ## Update In Group
