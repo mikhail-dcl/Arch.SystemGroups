@@ -1,0 +1,6 @@
+<!-- Directory.Build.props -->
+    <Project>
+        <PropertyGroup>
+            <UnityVersion>2022.2.9f1</UnityVersion>
+        </PropertyGroup>
+    </Project>

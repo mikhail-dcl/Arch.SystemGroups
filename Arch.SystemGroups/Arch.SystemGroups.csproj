@@ -9,12 +9,7 @@
     <ItemGroup>
       <PackageReference Include="Arch.LowLevel" Version="1.0.2" />
       <PackageReference Include="Arch.System" Version="1.0.2" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Reference Include="UnityEngine.CoreModule">
-        <HintPath>C:\Program Files\Unity\Hub\Editor\2022.2.9f1\Editor\Data\Managed\UnityEngine\UnityEngine.CoreModule.dll</HintPath>
-      </Reference>
+      <PackageReference Include="Unity3D" Version="2.1.2" />
     </ItemGroup>
 
 </Project>
