@@ -10,6 +10,9 @@
       <PackageReference Include="Arch.LowLevel" Version="1.0.2" />
       <PackageReference Include="Arch.System" Version="1.0.2" />
       <PackageReference Include="Unity3D" Version="2.1.2" />
+      <Reference Remove="$(UnityEnginePath)" />
+      <Reference Include="$(UnityModulesPath)\UnityEngine.CoreModule.dll" Private="false" />
+
     </ItemGroup>
 
 </Project>

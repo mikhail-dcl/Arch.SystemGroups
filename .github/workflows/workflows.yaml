@@ -51,6 +51,11 @@ jobs:
 
     - name: Restore
       run: dotnet restore
+      
+    - name: Setup Unity
+      uses: kuler90/setup-unity@v1
+      with:
+        unity-version: 2022.2.9f1
 
     - name: Build
       run: dotnet build --configuration Release --no-restore
