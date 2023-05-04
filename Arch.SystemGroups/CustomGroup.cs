@@ -12,7 +12,11 @@ public class CustomGroup<T> : ISystem<T>
 {
     private List<ISystem<T>> _systems;
     
-    internal CustomGroup()
+    /// <summary>
+    /// Creates an empty group, for auto-generated code only,
+    /// Don't invoke it manually
+    /// </summary>
+    protected CustomGroup()
     {
     }
 
