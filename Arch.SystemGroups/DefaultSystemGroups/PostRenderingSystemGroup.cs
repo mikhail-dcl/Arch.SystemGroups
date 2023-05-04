@@ -10,7 +10,7 @@ namespace Arch.SystemGroups.DefaultSystemGroups;
 /// </summary>
 public class PostRenderingSystemGroup : SystemGroup
 {
-    public PostRenderingSystemGroup(List<ISystem<float>> systems) : base(systems)
+    internal PostRenderingSystemGroup(List<ISystem<float>> systems) : base(systems)
     {
     }
     

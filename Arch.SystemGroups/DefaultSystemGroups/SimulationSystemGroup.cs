@@ -9,7 +9,7 @@ namespace Arch.SystemGroups.DefaultSystemGroups;
 /// </summary>
 public class SimulationSystemGroup : SystemGroup
 {
-    public SimulationSystemGroup(List<ISystem<float>> systems) : base(systems)
+    internal SimulationSystemGroup(List<ISystem<float>> systems) : base(systems)
     {
     }
     

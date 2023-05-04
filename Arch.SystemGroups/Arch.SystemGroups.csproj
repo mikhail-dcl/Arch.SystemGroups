@@ -6,6 +6,10 @@
         <LangVersion>10</LangVersion>
     </PropertyGroup>
 
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+      <DocumentationFile>bin\Release\Arch.SystemGroups.xml</DocumentationFile>
+    </PropertyGroup>
+
     <ItemGroup>
       <PackageReference Include="Arch.LowLevel" Version="1.0.2" />
       <PackageReference Include="Arch.System" Version="1.0.2" />

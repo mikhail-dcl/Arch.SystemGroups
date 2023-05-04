@@ -2,7 +2,10 @@
 
 namespace Arch.SystemGroups;
 
-public interface IUnityPlayerLoopHelper
+/// <summary>
+/// Abstraction needed for Mocking
+/// </summary>
+internal interface IUnityPlayerLoopHelper
 {
     void AppendWorldToCurrentPlayerLoop(
         InitializationSystemGroup initializationSystemGroup,

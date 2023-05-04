@@ -11,7 +11,7 @@ namespace Arch.SystemGroups.DefaultSystemGroups;
 /// </summary>
 public class PhysicsSystemGroup : SystemGroup
 {
-    public PhysicsSystemGroup(List<ISystem<float>> systems) : base(systems)
+    internal PhysicsSystemGroup(List<ISystem<float>> systems) : base(systems)
     {
     }
     

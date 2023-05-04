@@ -1,13 +1,23 @@
 using System;
-using System.Buffers;
 using System.Collections.Generic;
 using Arch.System;
 using UnityEngine.Pool;
 
 namespace Arch.SystemGroups;
 
+/// <summary>
+/// Sorts systems. Used by auto-generated code. Consider ignoring it
+/// </summary>
 public static class ArchSystemsSorter
 {
+    /// <summary>
+    /// Adds a dependency edge to the graph.
+    /// Supports redundancies.
+    /// Circular dependencies will be resolved on the final stage of the graph traversal
+    /// </summary>
+    /// <param name="from">System that should be updated before <paramref name="to"/> </param>
+    /// <param name="to">System that should be updated after</param>
+    /// <param name="edges">Storage of edges</param>
     public static void AddEdge(Type from, Type to, Dictionary<Type, List<Type>> edges)
     {
         if (!edges.TryGetValue(from, out var list))

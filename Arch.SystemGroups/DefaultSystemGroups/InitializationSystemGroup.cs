@@ -10,7 +10,7 @@ namespace Arch.SystemGroups.DefaultSystemGroups;
 /// </summary>
 public class InitializationSystemGroup : SystemGroup
 {
-    public InitializationSystemGroup(List<ISystem<float>> systems) : base(systems)
+    internal InitializationSystemGroup(List<ISystem<float>> systems) : base(systems)
     {
     }
     

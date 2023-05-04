@@ -6,6 +6,10 @@ using UnityEngine.Pool;
 
 namespace Arch.SystemGroups;
 
+/// <summary>
+/// The builder of systems attached to the Unity Player Loop
+/// </summary>
+/// <typeparam name="T"></typeparam>
 public readonly struct ArchSystemsWorldBuilder<T>
 {
     private struct GroupInfo
@@ -19,6 +23,10 @@ public readonly struct ArchSystemsWorldBuilder<T>
 
     private readonly IUnityPlayerLoopHelper _unityPlayerLoopHelper;
         
+    /// <summary>
+    /// Create a systems builder for the given world
+    /// </summary>
+    /// <param name="world">ECS World (Normally "Arch.Core.World")</param>
     public ArchSystemsWorldBuilder(T world) : this(world, UnityPlayerLoopHelper.Wrapper.Instance)
     {
     }
@@ -32,6 +40,9 @@ public readonly struct ArchSystemsWorldBuilder<T>
         _customGroups = DictionaryPool<Type, CustomGroup<float>>.Get();
     }
 
+    /// <summary>
+    /// Current World
+    /// </summary>
     public T World { get; }
 
     /// <summary>
@@ -50,6 +61,9 @@ public readonly struct ArchSystemsWorldBuilder<T>
         return AddToGroup(newGroup, updateInGroupType, typeof(TGroup), addToEdges);
     }
         
+    /// <summary>
+    /// Used by auto-generated code
+    /// </summary>
     public ArchSystemsWorldBuilder<T> AddToGroup(ISystem<float> system, Type updateInGroupType, Type systemType,
         Action<Dictionary<Type, List<Type>>> addToEdges)
     {
@@ -68,8 +82,11 @@ public readonly struct ArchSystemsWorldBuilder<T>
             
         return this;
     }
-
-        
+    
+    /// <summary>
+    /// Finalize the builder and create a systems world
+    /// </summary>
+    /// <returns></returns>
     public SystemGroupWorld Finish()
     {
         InitializationSystemGroup initializationSystemGroup = InitializationSystemGroup.Empty;

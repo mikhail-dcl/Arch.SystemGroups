@@ -9,7 +9,7 @@ namespace Arch.SystemGroups.DefaultSystemGroups;
 /// </summary>
 public class PostPhysicsSystemGroup : SystemGroup
 {
-    public PostPhysicsSystemGroup(List<ISystem<float>> systems) : base(systems)
+    internal PostPhysicsSystemGroup(List<ISystem<float>> systems) : base(systems)
     {
     }
     

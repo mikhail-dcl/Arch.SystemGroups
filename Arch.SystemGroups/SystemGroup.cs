@@ -23,7 +23,7 @@ public abstract class SystemGroup : IDisposable
 
     internal abstract void Update();
 
-    protected void Update(float deltaTime)
+    private protected void Update(float deltaTime)
     {
         if (_systems.Count == 0) return;
         
@@ -43,14 +43,20 @@ public abstract class SystemGroup : IDisposable
         }
     }
 
-    public void Initialize()
+    internal void Initialize()
     {
         foreach (var system in _systems)
             system.Initialize();
     }
 
+    /// <summary>
+    /// Dispose all systems and release the list allocated for them.
+    /// After the dispose is called the instance of the group is no longer usable.
+    /// </summary>
     public void Dispose()
     {
+        foreach (var system in _systems)
+            system.Dispose();
         ListPool<ISystem<float>>.Release(_systems);
     }
 }

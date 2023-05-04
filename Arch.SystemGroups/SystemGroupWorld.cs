@@ -3,6 +3,9 @@ using System.Collections.Generic;
 
 namespace Arch.SystemGroups;
 
+/// <summary>
+/// An entry point to the systems connected to the Unity Player Loop.
+/// </summary>
 public class SystemGroupWorld : IDisposable
 {
     private readonly IUnityPlayerLoopHelper _unityPlayerLoopHelper;
@@ -15,6 +18,9 @@ public class SystemGroupWorld : IDisposable
         SystemGroups = systemGroups;
     }
 
+    /// <summary>
+    /// Recursively Initialize all systems in the world according to their execution order
+    /// </summary>
     public void Initialize()
     {
         for (var i = 0; i < SystemGroups.Count; i++)
@@ -23,6 +29,10 @@ public class SystemGroupWorld : IDisposable
         }
     }
 
+    /// <summary>
+    /// Recursively Dispose all systems in the world according to their execution order.
+    /// Remove all systems from the player loop
+    /// </summary>
     public void Dispose()
     {
         for (var i = 0; i < SystemGroups.Count; i++)

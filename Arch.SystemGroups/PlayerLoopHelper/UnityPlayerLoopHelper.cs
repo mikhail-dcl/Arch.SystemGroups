@@ -6,11 +6,24 @@ using UnityEngine.PlayerLoop;
 
 namespace Arch.SystemGroups;
 
+/// <summary>
+/// Provides utilities to inject systems into the Unity Player Loop
+/// </summary>
 public static class UnityPlayerLoopHelper
 {
+    /// <summary>
+    /// Determines whether the system should be added to the beginning or the end of the step of the player loop
+    /// </summary>
     public enum AddMode : byte
     {
+        /// <summary>
+        /// Add the system to the beginning of the step
+        /// </summary>
         Prepend,
+        
+        /// <summary>
+        /// Add the system to the end of the step
+        /// </summary>
         Append
     }
 
@@ -48,6 +61,9 @@ public static class UnityPlayerLoopHelper
         }
     }
 
+    /// <summary>
+    /// Attaches all system groups to the Unity Player Loop.
+    /// </summary>
     public static void AppendWorldToCurrentPlayerLoop(
         InitializationSystemGroup initializationSystemGroup,
         SimulationSystemGroup simulationSystemGroup,
@@ -141,6 +157,10 @@ public static class UnityPlayerLoopHelper
         return false;
     }
     
+    /// <summary>
+    /// Removes the given system group from the Unity Player Loop.
+    /// </summary>
+    /// <param name="systemGroup"></param>
     public static void RemoveFromCurrentPlayerLoop(SystemGroup systemGroup)
     {
         var playerLoop = PlayerLoop.GetCurrentPlayerLoop();

@@ -13,7 +13,7 @@ namespace Arch.SystemGroups;
 public class UpdateInGroupAttribute : Attribute
 {
     /// <summary>
-    /// Specify the <see cref="SystemGroup"/> or <see cref="Group{T}'1"/> which the tagged system should be added to. The tagged system
+    /// Specify the <see cref="SystemGroup"/> or <see cref="Group{T}"/> which the tagged system should be added to. The tagged system
     /// will be updated as part of this system group's Update() method.
     /// </summary>
     /// <param name="groupType">The <see cref="SystemGroup"/> type/</param>
