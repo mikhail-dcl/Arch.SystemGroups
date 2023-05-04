@@ -46,6 +46,9 @@ public static class UnityPlayerLoopHelper
     {
         internal static readonly Wrapper Instance = new ();
         
+        /// <summary>
+        /// <inheritdoc cref="IUnityPlayerLoopHelper.AppendWorldToCurrentPlayerLoop"/>
+        /// </summary>
         public void AppendWorldToCurrentPlayerLoop(InitializationSystemGroup initializationSystemGroup,
             SimulationSystemGroup simulationSystemGroup, PresentationSystemGroup presentationSystemGroup,
             PostRenderingSystemGroup postRenderingSystemGroup, PhysicsSystemGroup physicsSystemGroup,
@@ -55,14 +58,17 @@ public static class UnityPlayerLoopHelper
                 presentationSystemGroup, postRenderingSystemGroup, physicsSystemGroup, postPhysicsSystemGroup);
         }
 
+        /// <summary>
+        /// <inheritdoc cref="IUnityPlayerLoopHelper.RemoveFromCurrentPlayerLoop"/>
+        /// </summary>
         public void RemoveFromCurrentPlayerLoop(SystemGroup systemGroup)
         {
             UnityPlayerLoopHelper.RemoveFromCurrentPlayerLoop(systemGroup);
         }
     }
-
+    
     /// <summary>
-    /// Attaches all system groups to the Unity Player Loop.
+    /// <inheritdoc cref="IUnityPlayerLoopHelper.AppendWorldToCurrentPlayerLoop"/>
     /// </summary>
     public static void AppendWorldToCurrentPlayerLoop(
         InitializationSystemGroup initializationSystemGroup,
@@ -157,10 +163,6 @@ public static class UnityPlayerLoopHelper
         return false;
     }
     
-    /// <summary>
-    /// Removes the given system group from the Unity Player Loop.
-    /// </summary>
-    /// <param name="systemGroup"></param>
     public static void RemoveFromCurrentPlayerLoop(SystemGroup systemGroup)
     {
         var playerLoop = PlayerLoop.GetCurrentPlayerLoop();
