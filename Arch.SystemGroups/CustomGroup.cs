@@ -69,6 +69,9 @@ public class CustomGroup<T> : ISystem<T>
     /// </summary>
     public void Dispose()
     {
+        foreach (var system in _systems)
+            system.Dispose();
+        
         ListPool<ISystem<T>>.Release(_systems);
     }
 

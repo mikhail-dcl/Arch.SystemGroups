@@ -13,7 +13,7 @@ public class PresentationSystemGroup : SystemGroup
     {
     }
     
-    internal static readonly PresentationSystemGroup Empty = new (new List<ISystem<float>>());
+    internal static readonly PresentationSystemGroup Empty = new (null);
 
     internal override void Update()
     {

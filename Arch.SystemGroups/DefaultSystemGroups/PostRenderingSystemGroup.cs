@@ -14,7 +14,7 @@ public class PostRenderingSystemGroup : SystemGroup
     {
     }
     
-    internal static readonly PostRenderingSystemGroup Empty = new (new List<ISystem<float>>());
+    internal static readonly PostRenderingSystemGroup Empty = new (null);
 
     internal override void Update()
     {

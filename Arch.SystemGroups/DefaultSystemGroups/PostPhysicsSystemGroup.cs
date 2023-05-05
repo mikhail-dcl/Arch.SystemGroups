@@ -13,7 +13,7 @@ public class PostPhysicsSystemGroup : SystemGroup
     {
     }
     
-    internal static readonly PostPhysicsSystemGroup Empty = new (new List<ISystem<float>>());
+    internal static readonly PostPhysicsSystemGroup Empty = new (null);
 
     internal override void Update()
     {

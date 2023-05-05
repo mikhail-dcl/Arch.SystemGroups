@@ -25,6 +25,8 @@ public abstract class SystemGroup : IDisposable
 
     private protected void Update(float deltaTime)
     {
+        if (_systems == null) return;
+        
         if (_systems.Count == 0) return;
         
         foreach (var system in _systems)
@@ -45,6 +47,8 @@ public abstract class SystemGroup : IDisposable
 
     internal void Initialize()
     {
+        if (_systems == null) return;
+        
         foreach (var system in _systems)
             system.Initialize();
     }
@@ -55,6 +59,8 @@ public abstract class SystemGroup : IDisposable
     /// </summary>
     public void Dispose()
     {
+        if (_systems == null) return;
+        
         foreach (var system in _systems)
             system.Dispose();
         ListPool<ISystem<float>>.Release(_systems);

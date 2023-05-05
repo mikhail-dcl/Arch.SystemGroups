@@ -15,7 +15,7 @@ public class PhysicsSystemGroup : SystemGroup
     {
     }
     
-    internal static readonly PhysicsSystemGroup Empty = new (new List<ISystem<float>>());
+    internal static readonly PhysicsSystemGroup Empty = new (null);
 
     internal override void Update()
     {

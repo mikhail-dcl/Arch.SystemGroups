@@ -35,7 +35,8 @@ public static class AddAllSystemsGenerator
         }
 
         var template =
-            $$"""          
+            $$"""
+            using System;
             namespace Arch.SystemGroups
             {
                 {{fileBuilder}}

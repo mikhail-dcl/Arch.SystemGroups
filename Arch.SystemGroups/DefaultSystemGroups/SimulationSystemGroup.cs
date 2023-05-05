@@ -13,7 +13,7 @@ public class SimulationSystemGroup : SystemGroup
     {
     }
     
-    internal static readonly SimulationSystemGroup Empty = new (new List<ISystem<float>>());
+    internal static readonly SimulationSystemGroup Empty = new (null);
 
     internal override void Update()
     {

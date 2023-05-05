@@ -10,16 +10,20 @@ public class TestSetup1Tests
     private ArchSystemsWorldBuilder<TestWorld> _worldBuilder;
     private IUnityPlayerLoopHelper? _loopHelper;
 
+    private CustomSystem1 _customSystem1;
+    private CustomSystemWithParameters1 _customSystemWithParameters1;
+    private CustomSystemWithParameters2 _customSystemWithParameters2;
+    private CustomSystem1InCustomGroup1 _customSystem1InCustomGroup1;
+
     [SetUp]
     public void SetUp()
     {
         _worldBuilder = new ArchSystemsWorldBuilder<TestWorld>(new TestWorld(), _loopHelper = Substitute.For<IUnityPlayerLoopHelper>());
-        
-        _worldBuilder
-            .AddCustomSystem1()
-            .AddCustomSystemWithParameters1("test", 1)
-            .AddCustomSystemWithParameters2(new CustomClass1 {Value = 200})
-            .AddCustomSystem1InCustomGroup1(1.0, (f, i) => { });
+
+        _customSystem1 = CustomSystem1.InjectToWorld(ref _worldBuilder);
+        _customSystemWithParameters1 = CustomSystemWithParameters1.InjectToWorld(ref _worldBuilder, "test", 1);
+        _customSystemWithParameters2 = CustomSystemWithParameters2.InjectToWorld(ref _worldBuilder, new CustomClass1 {Value = 200});
+        _customSystem1InCustomGroup1 = CustomSystem1InCustomGroup1.InjectToWorld(ref _worldBuilder, 1.0, (f, i) => { });
     }
 
     [Test]
@@ -30,6 +34,30 @@ public class TestSetup1Tests
         AssertHelpers.AssertOrderOfSystemIsLessThenOtherSystem<InitializationSystemGroup, CustomSystem1, CustomGroup1>(world);
         AssertHelpers.AssertOrderOfSystemIsLessThenOtherSystem<InitializationSystemGroup, CustomSystemWithParameters2, CustomSystem1>(world);
         AssertHelpers.AssertOrderOfSystemIsLessThenOtherSystem<InitializationSystemGroup, CustomSystemWithParameters1, CustomSystemWithParameters2>(world);
+    }
+
+    [Test]
+    public void IntiializesSystems()
+    {
+        var world = _worldBuilder.Finish();
+        world.Initialize();
+        
+        Assert.That(_customSystem1.IsInitialized, Is.True);
+        Assert.That(_customSystemWithParameters1.IsInitialized, Is.True);
+        Assert.That(_customSystemWithParameters2.IsInitialized, Is.True);
+        Assert.That(_customSystem1InCustomGroup1.IsInitialized, Is.True);
+    }
+
+    [Test]
+    public void DisposesSystems()
+    {
+        var world = _worldBuilder.Finish();
+        world.Dispose();
+        
+        Assert.That(_customSystem1.IsDisposed, Is.True);
+        Assert.That(_customSystemWithParameters1.IsDisposed, Is.True);
+        Assert.That(_customSystemWithParameters2.IsDisposed, Is.True);
+        Assert.That(_customSystem1InCustomGroup1.IsDisposed, Is.True);
     }
 
     [Test]
@@ -64,7 +92,7 @@ public class TestSetup1Tests
         void AssertIsEmpty<T>() where T : SystemGroup
         {
             var group = world.SystemGroups.OfType<T>().First();
-            Assert.That(group.Systems.Count, Is.EqualTo(0));
+            Assert.That(group.Systems, Is.Null);
         }
         
         AssertIsEmpty<PhysicsSystemGroup>();

@@ -14,7 +14,7 @@ public class InitializationSystemGroup : SystemGroup
     {
     }
     
-    internal static readonly InitializationSystemGroup Empty = new (new List<ISystem<float>>());
+    internal static readonly InitializationSystemGroup Empty = new (null);
 
     internal override void Update()
     {
