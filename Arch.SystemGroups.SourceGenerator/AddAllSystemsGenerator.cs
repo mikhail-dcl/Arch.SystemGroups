@@ -19,7 +19,7 @@ public static class AddAllSystemsGenerator
 
             foreach (var worldInfoGroup in worldInfo.Groups)
             {
-                GetInjectToWorldMethodForUniqueArgsCombination(methods, worldType, worldInfoGroup.Key,
+                GetInjectToWorldMethodForUniqueArgsCombination(methods, worldType, worldInfoGroup.Value.ArgsString,
                     worldInfoGroup.Value.PassString, worldInfoGroup.Value.Types);
             }
 
@@ -49,7 +49,7 @@ public static class AddAllSystemsGenerator
     private static void GetInjectToWorldMethodForUniqueArgsCombination(StringBuilder sb, ITypeSymbol worldType, string args, string pass,
         IList<ITypeSymbol> types)
     {
-        var injectCalls = GetEachInjectToWorld(args, pass, types);
+        var injectCalls = GetEachInjectToWorld(pass, types);
         
         var template = $$"""
                     public static ref ArchSystemsWorldBuilder<{{worldType}}> AddAllSystems(this ref ArchSystemsWorldBuilder<{{worldType}}> worldBuilder{{args}})
@@ -59,8 +59,7 @@ public static class AddAllSystemsGenerator
                     }
         """;
 
-        static StringBuilder GetEachInjectToWorld(string args, string pass,
-            IList<ITypeSymbol> types)
+        static StringBuilder GetEachInjectToWorld(string pass, IList<ITypeSymbol> types)
         {
             var sb = new StringBuilder();
             foreach (var type in types)

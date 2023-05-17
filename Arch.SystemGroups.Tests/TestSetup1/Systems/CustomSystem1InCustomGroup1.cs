@@ -23,3 +23,24 @@ public partial class CustomSystem1InCustomGroup1 : BaseSystem<TestWorld, float>
         IsDisposed = true;
     }
 }
+
+[UpdateInGroup(typeof(CustomGroup1))]
+public partial class CustomSystem2InCustomGroup1 : BaseSystem<TestWorld, float>
+{
+    public bool IsInitialized { get; private set; }
+    public bool IsDisposed { get; private set; }
+    
+    public CustomSystem2InCustomGroup1(TestWorld world, double customName, Action<float, int> f) : base(world)
+    {
+    }
+    
+    public override void Initialize()
+    {
+        IsInitialized = true;
+    }
+
+    public override void Dispose()
+    {
+        IsDisposed = true;
+    }
+}

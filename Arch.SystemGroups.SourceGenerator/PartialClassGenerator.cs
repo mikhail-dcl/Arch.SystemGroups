@@ -174,7 +174,7 @@ public static class PartialClassGenerator
         var addToGroup = InjectToWorldGenerator.GetAddToGroup(in systemInfo);
         var worldType = systemInfo.WorldType;
         
-        worldInfo.AddSystem(systemInfo.This, injectToWorldMethodParams, passArguments);
+        worldInfo.AddSystem(systemInfo.This, systemInfo.ConstructorParams, injectToWorldMethodParams, passArguments);
         
         var template =
             $$"""
