@@ -30,7 +30,7 @@ public partial class CustomSystem2InCustomGroup1 : BaseSystem<TestWorld, float>
     public bool IsInitialized { get; private set; }
     public bool IsDisposed { get; private set; }
     
-    public CustomSystem2InCustomGroup1(TestWorld world, double customName, Action<float, int> f) : base(world)
+    public CustomSystem2InCustomGroup1(TestWorld world, double customName = 0.2, Action<float, int>? f = null) : base(world)
     {
     }
     

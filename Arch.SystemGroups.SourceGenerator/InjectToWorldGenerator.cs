@@ -12,7 +12,9 @@ namespace Arch.SystemGroups.SourceGenerator
             {
                 sb.Append(", ");
                 var param = systemInfo.ConstructorParams[i];
-                sb.Append($"{CommonUtils.RefKindToString(param.RefKind)} {CommonUtils.GetTypeReferenceInGlobalNotation(param.Type)} {param.Name}");
+                
+                sb.Append($"{CommonUtils.RefKindToString(param.RefKind)} {CommonUtils.GetTypeReferenceInGlobalNotation(param.Type)} {param.Name}" +
+                          $"{(param.HasExplicitDefaultValue ? " = " + (param.ExplicitDefaultValue ?? "default") : string.Empty)}");
             }
 
             return sb;
