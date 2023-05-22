@@ -107,6 +107,7 @@ public partial class CustomGroup1
 Systems update order is controlled by `UpdateAfter` and `UpdateBefore` attributes.
 - Both systems and groups can be annotated with these attributes.
 - Only systems and groups annotated by `UpdateInGroup` are taken into consideration
+- `UpdateAfter` and `UpdateBefore` can't contain an open generic type (e.g. `typeof(CustomSystem<>)`). If you have such need, create a custom group and annotate the system with `UpdateInGroup` attribute.
 - It is possible to have several of them
 - it is possible to place redundant attributes, they will be properly resolved/ignored
 - As an argument attributes accept the system or group type
@@ -115,7 +116,8 @@ Systems update order is controlled by `UpdateAfter` and `UpdateBefore` attribute
 
 
 ## How to instantiate systems
-In order to bind systems to the player loop, distribute them in groups and sort accordingly, one must use auto-generated API.
+In order to bind systems to the player loop, distribute them in groups and sort accordingly, one must use auto-generated API. 
+The API is generated for non-abstract generic and non-generic systems that implement `Arch.System.ISystem<float>`.
 
 1. Instantiate `ArchSystemsWorldBuilder` with a desired type of `World`. With `Arch` you are most probably using `Arch.Core.World`
 
@@ -198,6 +200,8 @@ In order to bind systems to the player loop, distribute them in groups and sort 
           .AddAllSystems("test", 1)
           .AddAllSystems(1.0, (f, i) => { })
      ```
+
+     > For generic systems such extensions are not generated. You will have to use the `Factory Method` or `AddSystem` extension
 3. Add as many systems as needed
 4. Call `var groupWorld = worldBuilder.Finish()` to create all groups and systems, and sort them
 5. Call `groupWorld.Initialize()` to recursively initialize systems, it will be called in accordance to `Update Order`

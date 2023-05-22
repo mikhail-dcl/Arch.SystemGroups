@@ -12,7 +12,7 @@ namespace Arch.SystemGroups.SourceGenerator
             {
                 sb.Append(", ");
                 var param = systemInfo.ConstructorParams[i];
-                
+
                 sb.Append($"{CommonUtils.RefKindToString(param.RefKind)} {CommonUtils.GetTypeReferenceInGlobalNotation(param.Type)} {param.Name}" +
                           $"{(param.HasExplicitDefaultValue ? " = " + (param.ExplicitDefaultValue ?? "default") : string.Empty)}");
             }
@@ -49,24 +49,25 @@ namespace Arch.SystemGroups.SourceGenerator
             return $"{systemInfo.UpdateInGroup}.TryCreateGroup(ref worldBuilder);";
         }
 
-        public static StringBuilder GetAddToGroup(in SystemInfo systemInfo)
+        public static StringBuilder GetAddToGroup(in SystemInfo systemInfo, string typeGenericArguments)
         {
             var sb = new StringBuilder();
 
             sb.Append("worldBuilder.AddToGroup(");
             sb.Append("system, ");
             sb.Append($"typeof({systemInfo.UpdateInGroup}), ");
-            sb.Append($"typeof({systemInfo.ClassName}), ");
+            sb.Append($"typeof({systemInfo.ClassName}{typeGenericArguments}), ");
             sb.Append(EdgesGenerator.AddEdgesCachedFieldName);
             sb.Append(");");
             
             return sb;
         }
 
-        public static StringBuilder GetSystemInstantiation(in SystemInfo systemInfo)
+        public static StringBuilder GetSystemInstantiation(in SystemInfo systemInfo, string typeGenericArguments)
         {
             var sb = new StringBuilder("var system = new ");
             sb.Append(systemInfo.ClassName);
+            sb.Append(typeGenericArguments);
             sb.Append("(");
             sb.Append("worldBuilder.World");
             for (var i = 0; i < systemInfo.ConstructorParams.Length; i++)

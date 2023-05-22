@@ -164,17 +164,20 @@ public static class PartialClassGenerator
     
     private static string GetSystemPartialClass(in SystemInfo systemInfo, WorldInfo worldInfo)
     {
+        var typeGenericArguments = CommonUtils.GetGenericArguments(systemInfo.This);
+        var typeGenericArgumentsWhere = CommonUtils.GetGenericConstraintsString(systemInfo.This);
         var addEdgesFieldDeclaration = EdgesGenerator.GetAddEdgesCachedField();
         var addEdgesBody = EdgesGenerator.GetAddEdgesBody(systemInfo.UpdateBefore, systemInfo.UpdateAfter, systemInfo.ClassName, systemInfo.This);
 
         var injectToWorldMethodParams = InjectToWorldGenerator.GetMethodArgumentsWithoutWorld(in systemInfo).ToString();
         var passArguments = InjectToWorldGenerator.GetPassArguments(in systemInfo).ToString();
-        var systemInstantiation = InjectToWorldGenerator.GetSystemInstantiation(in systemInfo);
+        var systemInstantiation = InjectToWorldGenerator.GetSystemInstantiation(in systemInfo, typeGenericArguments);
         var createGroup = InjectToWorldGenerator.GetGroupInjectionInvocation(in systemInfo);
-        var addToGroup = InjectToWorldGenerator.GetAddToGroup(in systemInfo);
+        var addToGroup = InjectToWorldGenerator.GetAddToGroup(in systemInfo, typeGenericArguments);
         var worldType = systemInfo.WorldType;
         
-        worldInfo.AddSystem(systemInfo.This, systemInfo.ConstructorParams, injectToWorldMethodParams, passArguments);
+        if (!systemInfo.This.IsGenericType())
+            worldInfo.AddSystem(systemInfo.This, systemInfo.ConstructorParams, injectToWorldMethodParams, passArguments);
         
         var template =
             $$"""
@@ -187,18 +190,18 @@ public static class PartialClassGenerator
 
                 {{systemInfo.AccessModifier}} static class {{systemInfo.ClassName}}InjectionExtensions 
                 {
-                    public static ref ArchSystemsWorldBuilder<{{worldType}}> Add{{systemInfo.ClassName}}(this ref ArchSystemsWorldBuilder<{{worldType}}> worldBuilder{{injectToWorldMethodParams}})
+                    public static ref ArchSystemsWorldBuilder<{{worldType}}> Add{{systemInfo.ClassName}}{{typeGenericArguments}}(this ref ArchSystemsWorldBuilder<{{worldType}}> worldBuilder{{injectToWorldMethodParams}}) {{typeGenericArgumentsWhere}}
                     {
-                        {{systemInfo.ClassName}}.InjectToWorld(ref worldBuilder{{passArguments}});
+                        {{systemInfo.ClassName}}{{typeGenericArguments}}.InjectToWorld(ref worldBuilder{{passArguments}});
                         return ref worldBuilder;
                     }
                 }
 
-                {{systemInfo.AccessModifier}} partial class {{systemInfo.ClassName}}{
+                {{systemInfo.AccessModifier}} partial class {{systemInfo.ClassName}}{{typeGenericArguments}}{
                     
                 {{addEdgesFieldDeclaration}}
 
-                public static {{systemInfo.ClassName}} InjectToWorld(ref ArchSystemsWorldBuilder<{{worldType}}> worldBuilder{{injectToWorldMethodParams}})
+                public static {{systemInfo.ClassName}}{{typeGenericArguments}} InjectToWorld(ref ArchSystemsWorldBuilder<{{worldType}}> worldBuilder{{injectToWorldMethodParams}})
                 {
                     {{systemInstantiation}}
                     {{createGroup}}

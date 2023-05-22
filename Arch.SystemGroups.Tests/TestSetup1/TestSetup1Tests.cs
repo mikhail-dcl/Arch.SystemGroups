@@ -37,7 +37,7 @@ public class TestSetup1Tests
     }
 
     [Test]
-    public void IntiializesSystems()
+    public void InitializesSystems()
     {
         var world = _worldBuilder.Finish();
         world.Initialize();

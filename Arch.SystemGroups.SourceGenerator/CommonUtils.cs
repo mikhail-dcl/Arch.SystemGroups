@@ -1,8 +1,9 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using System.Text;
+using Microsoft.CodeAnalysis;
 
 namespace Arch.SystemGroups.SourceGenerator;
 
-public class CommonUtils
+public static class CommonUtils
 {
     /// <summary>
     ///     Convert a <see cref="RefKind"/> to its code string equivalent.
@@ -27,9 +28,127 @@ public class CommonUtils
 
     public static string GetTypeReferenceInGlobalNotation(ITypeSymbol typeSymbol)
     {
-        return IsPrimitiveAlias(typeSymbol) ? typeSymbol.Name : "global::" + typeSymbol;
+        if (IsPrimitiveAlias(typeSymbol))
+            return typeSymbol.Name;
+
+        if (IsGenericArgument(typeSymbol))
+            return typeSymbol.ToString();
+
+        return "global::" + typeSymbol;
     }
     
+    // Check if a symbol denotes a generic argument
+    public static bool IsGenericArgument(ISymbol symbol)
+    {
+        if (symbol.ContainingSymbol is INamedTypeSymbol namedTypeSymbol)
+        {
+            foreach (ITypeSymbol typeArgument in namedTypeSymbol.TypeArguments)
+            {
+                if (SymbolEqualityComparer.Default.Equals(typeArgument, symbol))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    public static bool IsGenericType(this ITypeSymbol typeSymbol) => 
+        typeSymbol is INamedTypeSymbol { IsGenericType: true, TypeArguments.Length: > 0 };
+
+    public static string GetGenericArguments(ITypeSymbol typeSymbol)
+    {
+        if (!(typeSymbol is INamedTypeSymbol { IsGenericType: true } namedTypeSymbol) || namedTypeSymbol.TypeArguments.Length == 0)
+            return string.Empty;
+        
+        var genericArgumentsBuilder = new StringBuilder("<");
+
+        for (int i = 0; i < namedTypeSymbol.TypeArguments.Length; i++)
+        {
+            ITypeSymbol typeArgument = namedTypeSymbol.TypeArguments[i];
+            genericArgumentsBuilder.Append(typeArgument.Name);
+
+            if (i < namedTypeSymbol.TypeArguments.Length - 1)
+            {
+                genericArgumentsBuilder.Append(", ");
+            }
+        }
+
+        genericArgumentsBuilder.Append(">");
+
+        return genericArgumentsBuilder.ToString();
+    }
+    
+    public static string GetGenericConstraintsString(ITypeSymbol typeSymbol)
+    {
+        if (!(typeSymbol is INamedTypeSymbol { IsGenericType: true } namedTypeSymbol) || namedTypeSymbol.TypeArguments.Length == 0)
+            return string.Empty;
+
+        var constraintsBuilder = new StringBuilder();
+
+        foreach (ITypeParameterSymbol typeParameter in namedTypeSymbol.TypeParameters)
+        {
+            void AppendWhere()
+            {
+                constraintsBuilder.Append(" where ");
+                constraintsBuilder.Append(typeParameter.Name);
+                constraintsBuilder.Append(" : ");
+            }
+
+            var typeConstraintBuilder = new StringBuilder();
+            
+            void AppendComma()
+            {
+                if (typeConstraintBuilder.Length > 0)
+                    typeConstraintBuilder.Append(", ");
+            }
+
+            if (typeParameter.HasUnmanagedTypeConstraint)
+            {
+                typeConstraintBuilder.Append("unmanaged");
+            }
+            else if (typeParameter.HasValueTypeConstraint)
+            {
+                typeConstraintBuilder.Append("struct");
+            }
+            else if (typeParameter.HasReferenceTypeConstraint)
+            {
+                typeConstraintBuilder.Append("class");
+            }
+
+            if (typeParameter.ConstraintTypes.Length > 0)
+            {
+                AppendComma();
+                
+                for (int i = 0; i < typeParameter.ConstraintTypes.Length; i++)
+                {
+                    ITypeSymbol constraintType = typeParameter.ConstraintTypes[i];
+                    typeConstraintBuilder.Append(GetTypeReferenceInGlobalNotation(constraintType));
+
+                    if (i < typeParameter.ConstraintTypes.Length - 1)
+                    {
+                        typeConstraintBuilder.Append(", ");
+                    }
+                }
+            }
+
+            if (typeParameter.HasConstructorConstraint)
+            {
+                AppendComma();
+                typeConstraintBuilder.Append("new()");
+            }
+            
+            if (typeConstraintBuilder.Length > 0)
+            {
+                AppendWhere();
+                constraintsBuilder.Append(typeConstraintBuilder);
+            }
+        }
+
+        return constraintsBuilder.ToString();
+    }
+
     public static bool IsPrimitiveAlias(ITypeSymbol typeSymbol)
     {
         // Check if the type is a primitive type or an alias to a primitive type
