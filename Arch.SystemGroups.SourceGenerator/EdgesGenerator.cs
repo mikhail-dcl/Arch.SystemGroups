@@ -11,7 +11,7 @@ namespace Arch.SystemGroups.SourceGenerator
         public static string GetAddEdgesCachedField() =>
             $"private static readonly Action<Dictionary<Type, List<Type>>> {AddEdgesCachedFieldName} = AddEdges;";
         
-        public static StringBuilder GetAddEdgesBody(IList<ITypeSymbol> updateBefore, IList<ITypeSymbol> updateAfter, string className, ITypeSymbol thisType)
+        public static StringBuilder GetAddEdgesBody(IList<ITypeSymbol> updateBefore, IList<ITypeSymbol> updateAfter, string className, ITypeSymbol thisType, string typeGenericArguments)
         {
             var builder = new StringBuilder();
 
@@ -23,7 +23,7 @@ namespace Arch.SystemGroups.SourceGenerator
                 
                 // Update After = from That Type to This
                 builder.AppendLine(
-                    $"ArchSystemsSorter.AddEdge(typeof({typeSymbol}), typeof({className}), edgesMap);");
+                    $"ArchSystemsSorter.AddEdge(typeof({typeSymbol}), typeof({className}{typeGenericArguments}), edgesMap);");
             }
 
             foreach (var typeSymbol in updateBefore)
@@ -33,7 +33,7 @@ namespace Arch.SystemGroups.SourceGenerator
                 
                 // Update Before = from This Type to That
                 builder.AppendLine(
-                    $"ArchSystemsSorter.AddEdge(typeof({className}), typeof({typeSymbol}), edgesMap);");
+                    $"ArchSystemsSorter.AddEdge(typeof({className}{typeGenericArguments}), typeof({typeSymbol}), edgesMap);");
             }
 
             if (builder.Length == 0)

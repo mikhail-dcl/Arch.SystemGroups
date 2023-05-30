@@ -1,5 +1,4 @@
 ﻿using Arch.System;
-using Arch.SystemGroups.DefaultSystemGroups;
 using Arch.SystemGroups.Tests.TestSetup1;
 
 namespace Arch.SystemGroups.Tests.GenericSetup;

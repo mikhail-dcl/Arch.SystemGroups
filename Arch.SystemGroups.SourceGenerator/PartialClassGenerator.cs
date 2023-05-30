@@ -167,7 +167,7 @@ public static class PartialClassGenerator
         var typeGenericArguments = CommonUtils.GetGenericArguments(systemInfo.This);
         var typeGenericArgumentsWhere = CommonUtils.GetGenericConstraintsString(systemInfo.This);
         var addEdgesFieldDeclaration = EdgesGenerator.GetAddEdgesCachedField();
-        var addEdgesBody = EdgesGenerator.GetAddEdgesBody(systemInfo.UpdateBefore, systemInfo.UpdateAfter, systemInfo.ClassName, systemInfo.This);
+        var addEdgesBody = EdgesGenerator.GetAddEdgesBody(systemInfo.UpdateBefore, systemInfo.UpdateAfter, systemInfo.ClassName, systemInfo.This, typeGenericArguments);
 
         var injectToWorldMethodParams = InjectToWorldGenerator.GetMethodArgumentsWithoutWorld(in systemInfo).ToString();
         var passArguments = InjectToWorldGenerator.GetPassArguments(in systemInfo).ToString();
@@ -223,7 +223,7 @@ public static class PartialClassGenerator
     public static string GetGroupPartialClass(in GroupInfo groupInfo)
     {
         var addEdgesFieldDeclaration = EdgesGenerator.GetAddEdgesCachedField();
-        var addEdgesBody = EdgesGenerator.GetAddEdgesBody(groupInfo.UpdateBefore, groupInfo.UpdateAfter, groupInfo.ClassName, groupInfo.This);
+        var addEdgesBody = EdgesGenerator.GetAddEdgesBody(groupInfo.UpdateBefore, groupInfo.UpdateAfter, groupInfo.ClassName, groupInfo.This, string.Empty);
 
         var createGroup = CreateGroupGenerator.GetTryGetCreateGroup(in groupInfo);
         

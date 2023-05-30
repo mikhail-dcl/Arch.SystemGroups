@@ -39,7 +39,9 @@ public class GenericSetupTests
     
     private ArchSystemsWorldBuilder<TestWorld> _worldBuilder;
     private IUnityPlayerLoopHelper? _loopHelper;
-    
+
+    private GenericSystem0<double> _genericSystem0;
+
     private GenericSystem1<int> _genericSystem1Int;
     private GenericSystem1<string> _genericSystem1String;
     
@@ -53,7 +55,9 @@ public class GenericSetupTests
     public void SetUp()
     {
         _worldBuilder = new ArchSystemsWorldBuilder<TestWorld>(new TestWorld(), _loopHelper = Substitute.For<IUnityPlayerLoopHelper>());
-        
+
+        _genericSystem0 = GenericSystem0<double>.InjectToWorld(ref _worldBuilder, 0.5d);
+
         _genericSystem1Int = GenericSystem1<int>.InjectToWorld(ref _worldBuilder, 1);
         _genericSystem1String = GenericSystem1<string>.InjectToWorld(ref _worldBuilder, "test");
         
@@ -70,6 +74,7 @@ public class GenericSetupTests
         var world = _worldBuilder.Finish();
         
         AssertHelpers.AssertOrderOfSystemIsLessThenOtherSystem<InitializationSystemGroup, Group1OfGenerics, Group2OfGenerics>(world);
+        AssertHelpers.AssertOrderOfSystemIsLessThenOtherSystem<InitializationSystemGroup, GenericSystem0<double>, Group1OfGenerics>(world);
 
         var init = world.SystemGroups.OfType<InitializationSystemGroup>().First();
         var group1 = init.Systems.OfType<Group1OfGenerics>().First();
