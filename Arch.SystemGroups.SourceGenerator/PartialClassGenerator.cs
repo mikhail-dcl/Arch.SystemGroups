@@ -99,7 +99,9 @@ public static class PartialClassGenerator
     {
         // Roslyn reports the fully qualified name
         const string updateInGroupAttrName = "UpdateInGroupAttribute";
+
         var attributes = typeSymbol.GetAttributes();
+        
         foreach (var attribute in attributes)
         {
             var attrName = attribute.AttributeClass.Name;

@@ -27,18 +27,41 @@ public static class UnityPlayerLoopHelper
         Append
     }
 
-    internal class DelegateWrapper
+    /// <summary>
+    /// Contains the list of system groups of the same type
+    /// </summary>
+    internal class SystemGroupAggregate
     {
-        public DelegateWrapper(SystemGroup systemGroup)
-        {
-            SystemGroup = systemGroup;
-        }
+        private readonly List<SystemGroup> _systemGroups = new (16);
 
-        internal SystemGroup SystemGroup { get; }
+        /// <summary>
+        /// For debugging purpose only
+        /// </summary>
+        internal readonly Type GroupType;
+
+        internal int Count => _systemGroups.Count;
+
+        public SystemGroupAggregate(Type groupType)
+        {
+            GroupType = groupType;
+        }
         
         public void TriggerUpdate()
         {
-            SystemGroup.Update();
+            for (var i = 0; i < _systemGroups.Count; i++)
+            {
+                _systemGroups[i].Update();
+            }
+        }
+
+        public void Add(SystemGroup systemGroup)
+        {
+            _systemGroups.Add(systemGroup);
+        }
+
+        public void Remove(SystemGroup systemGroup)
+        {
+            _systemGroups.Remove(systemGroup);
         }
     }
 
@@ -66,7 +89,9 @@ public static class UnityPlayerLoopHelper
             UnityPlayerLoopHelper.RemoveFromCurrentPlayerLoop(systemGroup);
         }
     }
-    
+
+    private static readonly Dictionary<Type, SystemGroupAggregate> Aggregates = new (6);
+
     /// <summary>
     /// <inheritdoc cref="IUnityPlayerLoopHelper.AppendWorldToCurrentPlayerLoop"/>
     /// </summary>
@@ -92,6 +117,8 @@ public static class UnityPlayerLoopHelper
 
     /// <summary>
     /// Add an ECS system to a specific point in the Unity player loop, so that it is updated every frame.
+    /// <para>The system groups are being inserted into their corresponding aggregate that is unique for each group type,
+    /// the execution order of the system groups inside the aggregate is not guaranteed and must be expected to be used for independent worlds</para>
     /// </summary>
     /// <remarks>
     /// This function does not change the currently active player loop. If this behavior is desired, it's necessary
@@ -105,10 +132,17 @@ public static class UnityPlayerLoopHelper
     public static void AddSystemToPlayerLoop(SystemGroup systemGroup, ref PlayerLoopSystem playerLoop, Type playerLoopSystemType, AddMode addMode)
     {
         if (systemGroup == null) return;
+
+        var systemGroupType = systemGroup.GetType();
         
-        var wrapper = new DelegateWrapper(systemGroup);
-        if (!AppendToPlayerLoopList(systemGroup.GetType(), wrapper.TriggerUpdate, ref playerLoop, playerLoopSystemType, addMode))
+        // If there is no aggregate yet, add it
+        if (!Aggregates.TryGetValue(systemGroupType, out var aggregate))
+            Aggregates[systemGroupType] = aggregate = new SystemGroupAggregate(systemGroupType);
+
+        if (!AppendToPlayerLoopList(systemGroup.GetType(), aggregate.TriggerUpdate, ref playerLoop, playerLoopSystemType, addMode))
             throw new ArgumentException($"Could not find PlayerLoopSystem with type={playerLoopSystemType}");
+        
+        aggregate.Add(systemGroup);
     }
     
     static bool AppendToPlayerLoopList(Type updateType, PlayerLoopSystem.UpdateFunction updateFunction, ref PlayerLoopSystem playerLoop, Type playerLoopSystemType, AddMode addMode)
@@ -163,19 +197,35 @@ public static class UnityPlayerLoopHelper
         return false;
     }
     
+    /// <summary>
+    /// Remove the system group from the player loop
+    /// </summary>
     public static void RemoveFromCurrentPlayerLoop(SystemGroup systemGroup)
     {
+        var systemGroupType = systemGroup.GetType();
+        
+        if (!Aggregates.TryGetValue(systemGroupType, out var aggregate))
+            return;
+        
+        aggregate.Remove(systemGroup);
+
+        if (aggregate.Count > 0)
+            return;
+
+        Aggregates.Remove(systemGroupType);
+        
+        // If there are no more system groups in the aggregate remove the aggregate itself
         var playerLoop = PlayerLoop.GetCurrentPlayerLoop();
 
-        if (RemoveFromPlayerLoopList(systemGroup, ref playerLoop))
+        if (RemoveFromPlayerLoopList(aggregate, ref playerLoop))
             PlayerLoop.SetPlayerLoop(playerLoop);
     }
     
-    private static bool RemoveFromPlayerLoopList(SystemGroup systemGroup, ref PlayerLoopSystem playerLoop)
+    private static bool RemoveFromPlayerLoopList(SystemGroupAggregate aggregate, ref PlayerLoopSystem playerLoop)
     {
-        static bool IsSystemGroup(SystemGroup systemGroup, ref PlayerLoopSystem playerLoopSystem)
+        static bool IsSystemGroup(SystemGroupAggregate aggregate, ref PlayerLoopSystem playerLoopSystem)
         {
-            return playerLoopSystem.updateDelegate?.Target is DelegateWrapper wrapper && wrapper.SystemGroup == systemGroup;
+            return playerLoopSystem.updateDelegate?.Target == aggregate;
         }
         
         if (playerLoop.subSystemList == null || playerLoop.subSystemList.Length == 0)
@@ -186,8 +236,8 @@ public static class UnityPlayerLoopHelper
         for (var i = 0; i < playerLoop.subSystemList.Length; ++i)
         {
             ref var playerLoopSubSystem = ref playerLoop.subSystemList[i];
-            result |= RemoveFromPlayerLoopList(systemGroup, ref playerLoopSubSystem);
-            if (!IsSystemGroup(systemGroup, ref playerLoopSubSystem))
+            result |= RemoveFromPlayerLoopList(aggregate, ref playerLoopSubSystem);
+            if (!IsSystemGroup(aggregate, ref playerLoopSubSystem))
                 newSubSystemList.Add(playerLoopSubSystem);
         }
 
