@@ -137,10 +137,12 @@ public static class UnityPlayerLoopHelper
         
         // If there is no aggregate yet, add it
         if (!Aggregates.TryGetValue(systemGroupType, out var aggregate))
+        {
             Aggregates[systemGroupType] = aggregate = new SystemGroupAggregate(systemGroupType);
 
-        if (!AppendToPlayerLoopList(systemGroup.GetType(), aggregate.TriggerUpdate, ref playerLoop, playerLoopSystemType, addMode))
-            throw new ArgumentException($"Could not find PlayerLoopSystem with type={playerLoopSystemType}");
+            if (!AppendToPlayerLoopList(systemGroup.GetType(), aggregate.TriggerUpdate, ref playerLoop, playerLoopSystemType, addMode))
+                throw new ArgumentException($"Could not find PlayerLoopSystem with type={playerLoopSystemType}");
+        }
         
         aggregate.Add(systemGroup);
     }
