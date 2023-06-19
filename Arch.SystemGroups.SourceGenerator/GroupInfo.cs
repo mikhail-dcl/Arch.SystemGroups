@@ -33,6 +33,11 @@ public struct GroupInfo
     /// The name of the class containing these Update Attributes.
     /// </summary>
     public string ClassName { get; set; }
+    
+    /// <summary>
+    /// Indicates if the group inherits from <see cref="CustomGroupBase{float}"/>
+    /// </summary>
+    public bool CustomBehaviourProvided { get; set; }
 
     /// <summary>
     /// Multiple Attributes that are used to define the order of the system.

@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Arch.System;
-using UnityEngine;
+using Arch.SystemGroups.UnityBridge;
 
 namespace Arch.SystemGroups.DefaultSystemGroups;
 
@@ -18,6 +18,6 @@ public class InitializationSystemGroup : SystemGroup
 
     internal override void Update()
     {
-        Update(Time.deltaTime);
+        Update(Time.DeltaTime);
     }
 }

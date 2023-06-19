@@ -19,7 +19,7 @@ public readonly struct ArchSystemsWorldBuilder<T>
     }
 
     private readonly Dictionary<Type, GroupInfo> _groupsInfo;
-    private readonly Dictionary<Type, CustomGroup<float>> _customGroups;
+    private readonly Dictionary<Type, CustomGroupBase<float>> _customGroups;
 
     private readonly IUnityPlayerLoopHelper _unityPlayerLoopHelper;
         
@@ -37,7 +37,7 @@ public readonly struct ArchSystemsWorldBuilder<T>
         _unityPlayerLoopHelper = unityPlayerLoopHelper;
 
         _groupsInfo = DictionaryPool<Type, GroupInfo>.Get();
-        _customGroups = DictionaryPool<Type, CustomGroup<float>>.Get();
+        _customGroups = DictionaryPool<Type, CustomGroupBase<float>>.Get();
     }
 
     /// <summary>
@@ -49,7 +49,7 @@ public readonly struct ArchSystemsWorldBuilder<T>
     /// Creates Groups Automatically
     /// </summary>
     public ArchSystemsWorldBuilder<T> TryCreateGroup<TGroup>(Type updateInGroupType,
-        Action<Dictionary<Type, List<Type>>> addToEdges) where TGroup : CustomGroup<float>, new()
+        Action<Dictionary<Type, List<Type>>> addToEdges) where TGroup : CustomGroupBase<float>, new()
     {
         if (_customGroups.ContainsKey(typeof(TGroup)))
             return this;
@@ -117,7 +117,7 @@ public readonly struct ArchSystemsWorldBuilder<T>
         }
         
         DictionaryPool<Type, GroupInfo>.Release(_groupsInfo);
-        DictionaryPool<Type, CustomGroup<float>>.Release(_customGroups);
+        DictionaryPool<Type, CustomGroupBase<float>>.Release(_customGroups);
 
         _unityPlayerLoopHelper.AppendWorldToCurrentPlayerLoop(
             initializationSystemGroup,

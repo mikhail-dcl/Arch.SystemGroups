@@ -23,13 +23,30 @@ public static class PartialClassGenerator
         var updateAfter = new List<ITypeSymbol>();
         var updateBefore = new List<ITypeSymbol>();
         GetTypesFromAttributes(typeSymbol, updateAfter, updateBefore);
+        
+        bool IsCustomGroupBase(ITypeSymbol currentType)
+        {
+            var baseType = currentType.BaseType;
+                
+            if (baseType == null)
+                return false;
+                
+            if (baseType.IsGenericType && baseType.ContainingNamespace.ToString() == "Arch.SystemGroups" 
+                                       && baseType.Name == "CustomGroupBase" && baseType.TypeArguments.Length == 1)
+                return true;
+
+            return IsCustomGroupBase(baseType);
+        }
 
         // Differentiate between Group And System
         // If type symbol implements ISystem<float> interface then it is a system
         // We don't consider other than float argument
         var isSystem = typeSymbol.AllInterfaces.Any(x => x.IsGenericType && x.ContainingNamespace.ToString() == "Arch.System" 
                         && x.Name == "ISystem" && x.TypeArguments.Length == 1 && x.TypeArguments[0].Name is "Single" or "float");
-        if (isSystem)
+
+        var isCustomGroup = IsCustomGroupBase(typeSymbol);
+        
+        if (isSystem && !isCustomGroup)
         {
             // Find the first constructor, ignore other constructors
             var members = typeSymbol.GetMembers();
@@ -88,6 +105,7 @@ public static class PartialClassGenerator
             Namespace = namespc,
             AccessModifier = accessModifier,
             ClassName = className,
+            CustomBehaviourProvided = isCustomGroup,
             UpdateInGroup = updateInGroup,
             UpdateAfter = updateAfter,
             UpdateBefore = updateBefore
@@ -228,6 +246,7 @@ public static class PartialClassGenerator
         var addEdgesBody = EdgesGenerator.GetAddEdgesBody(groupInfo.UpdateBefore, groupInfo.UpdateAfter, groupInfo.ClassName, groupInfo.This, string.Empty);
 
         var createGroup = CreateGroupGenerator.GetTryGetCreateGroup(in groupInfo);
+        var customBehaviour = groupInfo.CustomBehaviourProvided;
         
         var template =
             $$"""
@@ -237,7 +256,7 @@ public static class PartialClassGenerator
             using Arch.SystemGroups;
 
             {{(!groupInfo.IsGlobalNamespace ? $"namespace {groupInfo.Namespace} {{" : "")}}
-                {{groupInfo.AccessModifier}} partial class {{groupInfo.ClassName}} : CustomGroup<float> {
+                {{groupInfo.AccessModifier}} partial class {{groupInfo.ClassName}}{{(customBehaviour ? string.Empty : ": DefaultGroup<float>")}} {
                     
                 {{addEdgesFieldDeclaration}}
 

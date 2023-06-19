@@ -1,30 +1,31 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using Arch.System;
 using UnityEngine.Pool;
 
 namespace Arch.SystemGroups;
 
 /// <summary>
-/// Similar to `Arch.System.Group` but with better API that allows pooling
+/// The base class that can be used to provide custom behaviour for a group
 /// </summary>
 /// <typeparam name="T"></typeparam>
-public class CustomGroup<T> : ISystem<T>
+public abstract class CustomGroupBase<T> : ISystem<T>
 {
     private List<ISystem<T>> _systems;
     
     /// <summary>
-    /// Creates an empty group, for auto-generated code only,
-    /// Don't invoke it manually
+    /// Creates an empty group
     /// </summary>
-    protected CustomGroup()
+    protected CustomGroupBase()
     {
     }
+    
+    internal List<ISystem<T>> Systems => _systems;
 
     /// <summary>
     /// Creates a group from the collection from which a pooled instance of the list will be created
     /// </summary>
     /// <param name="systems"></param>
-    public CustomGroup(IEnumerable<ISystem<T>> systems)
+    protected CustomGroupBase(IEnumerable<ISystem<T>> systems)
     {
         _systems = ListPool<ISystem<T>>.Get();
         AddRange(systems);
@@ -34,13 +35,11 @@ public class CustomGroup<T> : ISystem<T>
     /// Creates a group from the list that won't be copied
     /// </summary>
     /// <param name="systems"></param>
-    public CustomGroup(List<ISystem<T>> systems)
+    protected CustomGroupBase(List<ISystem<T>> systems)
     {
         _systems = systems;
     }
-
-    internal List<ISystem<T>> Systems => _systems;
-
+    
     /// <summary>
     /// Adds systems to the group
     /// </summary>
@@ -49,16 +48,16 @@ public class CustomGroup<T> : ISystem<T>
     {
         _systems.AddRange(systems);
     }
-
+    
     internal void SetSystems(List<ISystem<T>> systems)
     {
         _systems = systems;
     }
-
+    
     /// <summary>
     /// Initialize all systems in the group
     /// </summary>
-    public void Initialize()
+    protected void InitializeInternal()
     {
         foreach (var system in _systems)
             system.Initialize();
@@ -67,7 +66,7 @@ public class CustomGroup<T> : ISystem<T>
     /// <summary>
     /// Dispose all systems in the group
     /// </summary>
-    public void Dispose()
+    protected void DisposeInternal()
     {
         foreach (var system in _systems)
             system.Dispose();
@@ -76,32 +75,60 @@ public class CustomGroup<T> : ISystem<T>
     }
 
     /// <summary>
-    /// To comply with Arch.System.ISystem
+    /// Update all systems
     /// </summary>
     /// <param name="t">Delta time</param>
-    public void BeforeUpdate(in T t)
+    protected void BeforeUpdateInternal(in T t)
     {
         for (int index = 0; index < _systems.Count; ++index)
             _systems[index].BeforeUpdate(in t);
     }
 
     /// <summary>
-    /// To comply with Arch.System.ISystem
+    /// Update all systems
     /// </summary>
     /// <param name="t">Delta time</param>
-    public void Update(in T t)
+    protected void UpdateInternal(in T t)
     {
         for (int index = 0; index < _systems.Count; ++index)
             _systems[index].Update(in t);
     }
     
     /// <summary>
-    /// To comply with Arch.System.ISystem
+    /// Update all systems
     /// </summary>
     /// <param name="t">Delta time</param>
-    public void AfterUpdate(in T t)
+    protected void AfterUpdateInternal(in T t)
     {
         for (int index = 0; index < _systems.Count; ++index)
             _systems[index].AfterUpdate(in t);
     }
+    
+    /// <summary>
+    /// Override to provide Dispose behaviour, you can use <see cref="DisposeInternal"/> as the default implementation
+    /// </summary>
+    public abstract void Dispose();
+    
+    /// <summary>
+    /// Override to provide initialization behaviour, you can use <see cref="InitializeInternal"/> as the default implementation
+    /// </summary>
+    public abstract void Initialize();
+    
+    /// <summary>
+    /// Override to provide BeforeUpdate, you can use <see cref="BeforeUpdateInternal"/> as the default implementation
+    /// </summary>
+    /// <param name="t"></param>
+    public abstract void BeforeUpdate(in T t);
+    
+    /// <summary>
+    /// Override to provide Update behaviour, you can use <see cref="UpdateInternal"/> as the default implementation
+    /// </summary>
+    /// <param name="t"></param>
+    public abstract void Update(in T t);
+    
+    /// <summary>
+    /// Override to provide AfterUpdate behaviour, you can use <see cref="AfterUpdateInternal"/> as the default implementation
+    /// </summary>
+    /// <param name="t"></param>
+    public abstract void AfterUpdate(in T t);
 }
