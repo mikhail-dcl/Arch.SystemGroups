@@ -147,7 +147,7 @@ public class ThrottleGroupBase : CustomGroupBase<float>
 }
 ```
 
-You may want to customize groups` behaviour even further by providing a custom constructor.
+You may want to customize groups behaviour even further by providing a custom constructor.
 In this case the instantiated group should be passed manually by calling `InjectCustomGroup` before injecting any other systems or groups dependent on it.
 
 ```csharp
