@@ -1,4 +1,7 @@
-﻿using System.Text;
+﻿using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
+using System.Text;
 using Microsoft.CodeAnalysis;
 
 namespace Arch.SystemGroups.SourceGenerator;
@@ -180,4 +183,8 @@ public static class CommonUtils
         }
         return false;
     }
+
+    public static IEnumerable<IMethodSymbol> GetConstructors(this ITypeSymbol typeSymbol)
+        => typeSymbol.GetMembers().Where(m => m is IMethodSymbol { MethodKind: MethodKind.Constructor })
+            .Cast<IMethodSymbol>();
 }

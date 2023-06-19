@@ -104,6 +104,7 @@ public partial class CustomGroup1
 In some cases it can be useful to provide custom behavior for groups. For example, you might want to create a group that runs at a reduced frequency.
 
 To do so instead of creating an empty `partial` class, create a class that inherits from `Arch.SystemGroups.CustomGroupBase` and annotate it with `UpdateInGroup` attribute.
+If the only constructor it has is an empty one then this group will be instantiated automatically.
 
 ```csharp
 /// <summary>
@@ -146,7 +147,24 @@ public class ThrottleGroupBase : CustomGroupBase<float>
 }
 ```
 
-> If a group does not belong to a `System Group` then it is detached from the Player Loop and its system won't be updated
+You may want to customize groups` behaviour even further by providing a custom constructor.
+In this case the instantiated group should be passed manually by calling `InjectCustomGroup` before injecting any other systems or groups dependent on it.
+
+```csharp
+[UpdateInGroup(typeof(SimulationSystemGroup))]
+public partial class ParametrisedThrottleGroup : ThrottleGroupBase
+{
+    public ParametrisedThrottleGroup(int framesToSkip) : base(framesToSkip)
+    {
+    }
+}
+
+_worldBuilder.InjectCustomGroup(new ParametrisedThrottleGroup(framesToSkip));
+// then inject all systems
+```
+> Note: If a system is injected before the custom group it is included into directly or transitively an exception of type `GroupNotFoundException` will be thrown.
+
+> Note: If a group does not belong to a `System Group` then it is detached from the Player Loop and its system won't be updated
 
 ## Update Order
 

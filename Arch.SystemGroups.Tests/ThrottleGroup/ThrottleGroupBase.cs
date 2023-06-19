@@ -5,8 +5,17 @@ namespace Arch.SystemGroups.Tests.ThrottleGroup;
 /// </summary>
 public abstract class ThrottleGroupBase : CustomGroupBase<float>
 {
-    private bool open;
-    
+    private readonly int _framesToSkip;
+    private int _counter;
+
+    private bool _open;
+
+    protected ThrottleGroupBase(int framesToSkip)
+    {
+        _framesToSkip = framesToSkip;
+        _counter = framesToSkip;
+    }
+
     public override void Dispose()
     {
         DisposeInternal();
@@ -20,21 +29,24 @@ public abstract class ThrottleGroupBase : CustomGroupBase<float>
     public override void BeforeUpdate(in float t)
     {
         // Before Update is always called first in the same frame
-        open = !open;
-        
-        if (open)
+        _open = _counter >= _framesToSkip;
+        _counter++;
+        if (_open)
+        {
             BeforeUpdateInternal(in t);
+            _counter = 0;
+        }
     }
 
     public override void Update(in float t)
     {
-        if (open)
+        if (_open)
             UpdateInternal(in t);
     }
 
     public override void AfterUpdate(in float t)
     {
-        if (open)
+        if (_open)
             AfterUpdateInternal(in t);
     }
 }

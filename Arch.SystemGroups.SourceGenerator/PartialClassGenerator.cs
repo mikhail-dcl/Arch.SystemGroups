@@ -23,19 +23,28 @@ public static class PartialClassGenerator
         var updateAfter = new List<ITypeSymbol>();
         var updateBefore = new List<ITypeSymbol>();
         GetTypesFromAttributes(typeSymbol, updateAfter, updateBefore);
+
+        var constructors = typeSymbol.GetConstructors().ToImmutableArray();
         
-        bool IsCustomGroupBase(ITypeSymbol currentType)
+        GroupInfo.BehaviourInfo GetGroupBehaviourInfo(ITypeSymbol currentType)
         {
             var baseType = currentType.BaseType;
                 
             if (baseType == null)
-                return false;
-                
-            if (baseType.IsGenericType && baseType.ContainingNamespace.ToString() == "Arch.SystemGroups" 
-                                       && baseType.Name == "CustomGroupBase" && baseType.TypeArguments.Length == 1)
-                return true;
+                return new GroupInfo.BehaviourInfo {IsCustom = false, HasParameterlessConstructor = true};
 
-            return IsCustomGroupBase(baseType);
+            if (baseType.IsGenericType && baseType.ContainingNamespace.ToString() == "Arch.SystemGroups"
+                                       && baseType.Name == "CustomGroupBase" && baseType.TypeArguments.Length == 1)
+            {
+                return new GroupInfo.BehaviourInfo
+                {
+                    IsCustom = true,
+                    HasParameterlessConstructor =
+                        constructors.Length == 0 || constructors.Any(c => c.Parameters.Length == 0)
+                };
+            }
+
+            return GetGroupBehaviourInfo(baseType);
         }
 
         // Differentiate between Group And System
@@ -44,16 +53,13 @@ public static class PartialClassGenerator
         var isSystem = typeSymbol.AllInterfaces.Any(x => x.IsGenericType && x.ContainingNamespace.ToString() == "Arch.System" 
                         && x.Name == "ISystem" && x.TypeArguments.Length == 1 && x.TypeArguments[0].Name is "Single" or "float");
 
-        var isCustomGroup = IsCustomGroupBase(typeSymbol);
+        var behaviourInfo = GetGroupBehaviourInfo(typeSymbol);
         
-        if (isSystem && !isCustomGroup)
+        if (isSystem && !behaviourInfo.IsCustom)
         {
             // Find the first constructor, ignore other constructors
-            var members = typeSymbol.GetMembers();
             // If there is no explicit constructor there is always one empty constructor with no parameters
-            var constructorParams = members.FirstOrDefault(x => x is IMethodSymbol { MethodKind: MethodKind.Constructor }) is IMethodSymbol methodSymbol
-                ? methodSymbol.Parameters
-                : ImmutableArray<IParameterSymbol>.Empty;
+            var constructorParams = constructors.FirstOrDefault()?.Parameters ?? ImmutableArray<IParameterSymbol>.Empty;
             
             // There should be World parameter for all systems
             // if the system implements BaseSystem{W,T}'2 then W is the world type
@@ -105,7 +111,7 @@ public static class PartialClassGenerator
             Namespace = namespc,
             AccessModifier = accessModifier,
             ClassName = className,
-            CustomBehaviourProvided = isCustomGroup,
+            Behaviour = behaviourInfo,
             UpdateInGroup = updateInGroup,
             UpdateAfter = updateAfter,
             UpdateBefore = updateBefore
@@ -192,7 +198,7 @@ public static class PartialClassGenerator
         var injectToWorldMethodParams = InjectToWorldGenerator.GetMethodArgumentsWithoutWorld(in systemInfo).ToString();
         var passArguments = InjectToWorldGenerator.GetPassArguments(in systemInfo).ToString();
         var systemInstantiation = InjectToWorldGenerator.GetSystemInstantiation(in systemInfo, typeGenericArguments);
-        var createGroup = InjectToWorldGenerator.GetGroupInjectionInvocation(in systemInfo);
+        var createGroup = InjectToWorldGenerator.GetGroupInjectionInvocation(systemInfo.UpdateInGroup);
         var addToGroup = InjectToWorldGenerator.GetAddToGroup(in systemInfo, typeGenericArguments);
         var worldType = systemInfo.WorldType;
         
@@ -245,8 +251,10 @@ public static class PartialClassGenerator
         var addEdgesFieldDeclaration = EdgesGenerator.GetAddEdgesCachedField();
         var addEdgesBody = EdgesGenerator.GetAddEdgesBody(groupInfo.UpdateBefore, groupInfo.UpdateAfter, groupInfo.ClassName, groupInfo.This, string.Empty);
 
+        // If there is no system directly attached to the group we need to create the tree of groups, otherwise the leaf system will be detached
+        var groupInjection = InjectToWorldGenerator.GetGroupInjectionInvocation(groupInfo.UpdateInGroup);
         var createGroup = CreateGroupGenerator.GetTryGetCreateGroup(in groupInfo);
-        var customBehaviour = groupInfo.CustomBehaviourProvided;
+        var customBehaviour = groupInfo.Behaviour.IsCustom;
         
         var template =
             $$"""
@@ -261,7 +269,8 @@ public static class PartialClassGenerator
                 {{addEdgesFieldDeclaration}}
 
                 public static void TryCreateGroup<T>(ref ArchSystemsWorldBuilder<T> worldBuilder)
-                {                    
+                {
+                    {{groupInjection}}
                     {{createGroup}}
                 }
 

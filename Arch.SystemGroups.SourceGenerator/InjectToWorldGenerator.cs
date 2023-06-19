@@ -1,4 +1,5 @@
 using System.Text;
+using Microsoft.CodeAnalysis;
 
 namespace Arch.SystemGroups.SourceGenerator
 {
@@ -37,16 +38,13 @@ namespace Arch.SystemGroups.SourceGenerator
         /// <summary>
         /// If the group is not a SystemGroup then the message to call that group creation will be called
         /// </summary>
-        /// <param name="systemInfo"></param>
         /// <returns></returns>
-        public static string GetGroupInjectionInvocation(in SystemInfo systemInfo)
+        public static string GetGroupInjectionInvocation(in ITypeSymbol updateInGroup)
         {
-            var updateInGroup = systemInfo.UpdateInGroup;
-            
             if (updateInGroup.BaseType?.Name == "SystemGroup" && updateInGroup.BaseType?.ContainingNamespace?.ToString() == "Arch.SystemGroups")
                 return string.Empty;
 
-            return $"{systemInfo.UpdateInGroup}.TryCreateGroup(ref worldBuilder);";
+            return $"{updateInGroup}.TryCreateGroup(ref worldBuilder);";
         }
 
         public static StringBuilder GetAddToGroup(in SystemInfo systemInfo, string typeGenericArguments)

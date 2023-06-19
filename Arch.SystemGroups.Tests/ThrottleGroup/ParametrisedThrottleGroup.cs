@@ -3,10 +3,9 @@ using Arch.SystemGroups.DefaultSystemGroups;
 namespace Arch.SystemGroups.Tests.ThrottleGroup;
 
 [UpdateInGroup(typeof(SimulationSystemGroup))]
-public partial class ThrottleSimulationGroup : ThrottleGroupBase
+public partial class ParametrisedThrottleGroup : ThrottleGroupBase
 {
-    public ThrottleSimulationGroup() : base(1)
+    public ParametrisedThrottleGroup(int framesToSkip) : base(framesToSkip)
     {
-        
     }
 }
