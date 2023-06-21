@@ -2,16 +2,20 @@
 
 namespace Arch.SystemGroups.Tests;
 
-public class AssertHelpers
+public static class AssertHelpers
 {
+    /// <typeparam name="T">System or Group Type</typeparam>
+    internal static int FindIndexOfNode<T>(this List<ExecutionNode<float>> list)
+    {
+        return list.FindIndex(n => n.IsGroup ? n.CustomGroup.GetType() == typeof(T) : n.System.GetType() == typeof(T));
+    }
+    
     public static void AssertOrderOfSystemIsLessThenOtherSystem<TGroup, T1, T2>(SystemGroupWorld world)
-        where T1 : ISystem<float>
-        where T2 : ISystem<float>
         where TGroup : SystemGroup
     {
         var group = world.SystemGroups.OfType<TGroup>().First();
-        var index1 = group.Systems.FindIndex(system => system.GetType() == typeof(T1));
-        var index2 = group.Systems.FindIndex(system => system.GetType() == typeof(T2));
+        var index1 = group.Nodes.FindIndexOfNode<T1>();
+        var index2 = group.Nodes.FindIndexOfNode<T2>();
         
         if (index1 == -1) 
             throw new InvalidOperationException($"System {typeof(T1)} not found in group {typeof(TGroup)}");
@@ -21,12 +25,10 @@ public class AssertHelpers
         Assert.That(index1, Is.LessThan(index2));
     }
     
-    public static void AssertOrderOfSystemIsLessThenOtherSystem<T1, T2>(List<ISystem<float>> systems)
-        where T1 : ISystem<float>
-        where T2 : ISystem<float>
+    internal static void AssertOrderOfSystemIsLessThenOtherSystem<T1, T2>(List<ExecutionNode<float>> nodes)
     {
-        var index1 = systems.FindIndex(system => system.GetType() == typeof(T1));
-        var index2 = systems.FindIndex(system => system.GetType() == typeof(T2));
+        var index1 = nodes.FindIndexOfNode<T1>();
+        var index2 = nodes.FindIndexOfNode<T2>();
         
         if (index1 == -1)
             throw new InvalidOperationException($"System {typeof(T1)} not found)");
@@ -35,5 +37,24 @@ public class AssertHelpers
             throw new InvalidOperationException($"System {typeof(T2)} not found)");
         
         Assert.That(index1, Is.LessThan(index2));
+    }
+    
+    internal static void AssertNodesEquivalency(List<ExecutionNode<float>> nodes, params Type[] expectedTypes)
+    {
+        CollectionAssert.AreEquivalent(expectedTypes, nodes.Select(n => n.IsGroup ? n.CustomGroup.GetType() : n.System.GetType()));
+    }
+    
+    internal static T Find<T>(this List<ExecutionNode<float>> nodes)
+    {
+        foreach (var executionNode in nodes)
+        {
+            if (executionNode is { IsGroup: true, CustomGroup: T group })
+                return group;
+            
+            if (executionNode is { IsGroup: false, System: T system })
+                return system;
+        }
+        
+        throw new InvalidOperationException($"System or Group {typeof(T)} not found");
     }
 }

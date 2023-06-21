@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Arch.System;
 using Arch.SystemGroups.DefaultSystemGroups;
+using Arch.SystemGroups.Throttling;
 using UnityEngine.Pool;
 
 namespace Arch.SystemGroups;
@@ -14,7 +15,7 @@ public readonly struct ArchSystemsWorldBuilder<T>
 {
     private struct GroupInfo
     {
-        public Dictionary<Type, ISystem<float>> Systems;
+        public Dictionary<Type, ExecutionNode<float>> Systems;
         public Dictionary<Type, List<Type>> Edges;
     }
 
@@ -23,18 +24,29 @@ public readonly struct ArchSystemsWorldBuilder<T>
 
     private readonly IUnityPlayerLoopHelper _unityPlayerLoopHelper;
 
+    private readonly IFixedUpdateBasedSystemGroupThrottler _fixedUpdateBasedSystemGroupThrottler;
+    private readonly IUpdateBasedSystemGroupThrottler _updateBasedSystemGroupThrottler;
+
     /// <summary>
     ///     Create a systems builder for the given world
     /// </summary>
     /// <param name="world">ECS World (Normally "Arch.Core.World")</param>
-    public ArchSystemsWorldBuilder(T world) : this(world, UnityPlayerLoopHelper.Wrapper.Instance)
+    /// <param name="fixedUpdateBasedSystemGroupThrottler">Throttler for all Fixed Update based Systems</param>
+    /// <param name="updateBasedSystemGroupThrottler">Throttler for all Update based Systems</param>
+    public ArchSystemsWorldBuilder(T world, IFixedUpdateBasedSystemGroupThrottler fixedUpdateBasedSystemGroupThrottler = null,
+        IUpdateBasedSystemGroupThrottler updateBasedSystemGroupThrottler = null) : this(world,
+        UnityPlayerLoopHelper.Wrapper.Instance, fixedUpdateBasedSystemGroupThrottler, updateBasedSystemGroupThrottler)
     {
     }
 
-    internal ArchSystemsWorldBuilder(T world, IUnityPlayerLoopHelper unityPlayerLoopHelper)
+    internal ArchSystemsWorldBuilder(T world, IUnityPlayerLoopHelper unityPlayerLoopHelper,
+        IFixedUpdateBasedSystemGroupThrottler fixedUpdateBasedSystemGroupThrottler = null,
+        IUpdateBasedSystemGroupThrottler updateBasedSystemGroupThrottler = null)
     {
         World = world;
         _unityPlayerLoopHelper = unityPlayerLoopHelper;
+        _fixedUpdateBasedSystemGroupThrottler = fixedUpdateBasedSystemGroupThrottler;
+        _updateBasedSystemGroupThrottler = updateBasedSystemGroupThrottler;
 
         _groupsInfo = DictionaryPool<Type, GroupInfo>.Get();
         _customGroups = DictionaryPool<Type, CustomGroupBase<float>>.Get();
@@ -49,7 +61,7 @@ public readonly struct ArchSystemsWorldBuilder<T>
     ///     Creates Groups Automatically
     /// </summary>
     public ArchSystemsWorldBuilder<T> TryCreateGroup<TGroup>(Type updateInGroupType,
-        Action<Dictionary<Type, List<Type>>> addToEdges) where TGroup : CustomGroupBase<float>, new()
+        Action<Dictionary<Type, List<Type>>> addToEdges, bool throttlingEnabled) where TGroup : CustomGroupBase<float>, new()
     {
         if (_customGroups.ContainsKey(typeof(TGroup)))
             return this;
@@ -58,43 +70,51 @@ public readonly struct ArchSystemsWorldBuilder<T>
 
         _customGroups[typeof(TGroup)] = newGroup;
 
-        return AddToGroup(newGroup, updateInGroupType, typeof(TGroup), addToEdges);
+        return AddToGroup(new ExecutionNode<float>(newGroup, throttlingEnabled), updateInGroupType, typeof(TGroup), addToEdges);
     }
 
     /// <summary>
     ///     Registers a group that is not created automatically
     /// </summary>
-    public void TryRegisterGroup<TGroup>(Type updateInGroupType, Action<Dictionary<Type, List<Type>>> addToEdges)
+    public void TryRegisterGroup<TGroup>(Type updateInGroupType, Action<Dictionary<Type, List<Type>>> addToEdges, bool throttlingEnabled)
         where TGroup : CustomGroupBase<float>
     {
         // Thr group should be injected in advance
         if (!_customGroups.TryGetValue(typeof(TGroup), out var customGroup))
             throw new GroupNotFoundException(typeof(TGroup));
 
-        AddToGroup(customGroup, updateInGroupType, typeof(TGroup), addToEdges, false);
+        AddToGroup(new ExecutionNode<float>(customGroup, throttlingEnabled), updateInGroupType, typeof(TGroup), addToEdges, false);
     }
 
     /// <summary>
     ///     Used by auto-generated code
     /// </summary>
     public ArchSystemsWorldBuilder<T> AddToGroup(ISystem<float> system, Type updateInGroupType, Type systemType,
+        Action<Dictionary<Type, List<Type>>> addToEdges, bool throttlingEnabled, bool assertGroupExists = true)
+    {
+        return AddToGroup(new ExecutionNode<float>(system, throttlingEnabled), updateInGroupType, systemType, addToEdges,
+            assertGroupExists);
+    }
+
+    private ArchSystemsWorldBuilder<T> AddToGroup(ExecutionNode<float> node, Type updateInGroupType, Type systemType,
         Action<Dictionary<Type, List<Type>>> addToEdges, bool assertGroupExists = true)
     {
         if (!_groupsInfo.TryGetValue(updateInGroupType, out var group))
             _groupsInfo[updateInGroupType] = group = new GroupInfo
             {
-                Systems = DictionaryPool<Type, ISystem<float>>.Get(),
+                Systems = DictionaryPool<Type, ExecutionNode<float>>.Get(),
                 Edges = DictionaryPool<Type, List<Type>>.Get()
             };
 
         if (group.Systems.ContainsKey(systemType))
         {
             if (assertGroupExists)
-                throw new InvalidOperationException($"System {systemType} is already added to the group {updateInGroupType}.");
+                throw new InvalidOperationException(
+                    $"System {systemType} is already added to the group {updateInGroupType}.");
             return this;
         }
 
-        group.Systems[systemType] = system;
+        group.Systems[systemType] = node;
         addToEdges(group.Edges);
 
         return this;
@@ -120,12 +140,12 @@ public readonly struct ArchSystemsWorldBuilder<T>
 
         // how to detect detached systems?
 
-        CreateSystemGroup(ref initializationSystemGroup, list => new InitializationSystemGroup(list));
-        CreateSystemGroup(ref simulationSystemGroup, list => new SimulationSystemGroup(list));
-        CreateSystemGroup(ref presentationSystemGroup, list => new PresentationSystemGroup(list));
-        CreateSystemGroup(ref postRenderingSystemGroup, list => new PostRenderingSystemGroup(list));
-        CreateSystemGroup(ref physicsSystemGroup, list => new PhysicsSystemGroup(list));
-        CreateSystemGroup(ref postPhysicsSystemGroup, list => new PostPhysicsSystemGroup(list));
+        CreateSystemGroup(ref initializationSystemGroup, CreateInitializationSystemGroup);
+        CreateSystemGroup(ref simulationSystemGroup, CreateSimulationSystemGroup);
+        CreateSystemGroup(ref presentationSystemGroup, CreatePresentationSystemGroup);
+        CreateSystemGroup(ref postRenderingSystemGroup, CreatePostRenderingSystemGroup);
+        CreateSystemGroup(ref physicsSystemGroup, CreatePhysicsSystemGroup);
+        CreateSystemGroup(ref postPhysicsSystemGroup, CreatePostPhysicsSystemGroup);
 
         // All remaining groups are empty at the moment
         // Fill them with systems
@@ -162,7 +182,37 @@ public readonly struct ArchSystemsWorldBuilder<T>
         }, _unityPlayerLoopHelper);
     }
 
-    private void CreateSystemGroup<TGroup>(ref TGroup group, Func<List<ISystem<float>>, TGroup> constructor)
+    private PostPhysicsSystemGroup CreatePostPhysicsSystemGroup(List<ExecutionNode<float>> list)
+    {
+        return new PostPhysicsSystemGroup(list, _fixedUpdateBasedSystemGroupThrottler);
+    }
+
+    private PhysicsSystemGroup CreatePhysicsSystemGroup(List<ExecutionNode<float>> list)
+    {
+        return new PhysicsSystemGroup(list, _fixedUpdateBasedSystemGroupThrottler);
+    }
+
+    private PostRenderingSystemGroup CreatePostRenderingSystemGroup(List<ExecutionNode<float>> list)
+    {
+        return new PostRenderingSystemGroup(list, _updateBasedSystemGroupThrottler);
+    }
+
+    private PresentationSystemGroup CreatePresentationSystemGroup(List<ExecutionNode<float>> list)
+    {
+        return new PresentationSystemGroup(list, _updateBasedSystemGroupThrottler);
+    }
+
+    private SimulationSystemGroup CreateSimulationSystemGroup(List<ExecutionNode<float>> list)
+    {
+        return new SimulationSystemGroup(list, _updateBasedSystemGroupThrottler);
+    }
+
+    private InitializationSystemGroup CreateInitializationSystemGroup(List<ExecutionNode<float>> list)
+    {
+        return new InitializationSystemGroup(list, _updateBasedSystemGroupThrottler);
+    }
+
+    private void CreateSystemGroup<TGroup>(ref TGroup group, Func<List<ExecutionNode<float>>, TGroup> constructor)
         where TGroup : SystemGroup
     {
         if (_groupsInfo.TryGetValue(typeof(TGroup), out var groupsInfo))
@@ -176,7 +226,7 @@ public readonly struct ArchSystemsWorldBuilder<T>
 
     private void CleanUpGroupInfo(in GroupInfo groupInfo)
     {
-        DictionaryPool<Type, ISystem<float>>.Release(groupInfo.Systems);
+        DictionaryPool<Type, ExecutionNode<float>>.Release(groupInfo.Systems);
 
         foreach (var (_, edges) in groupInfo.Edges)
             ListPool<Type>.Release(edges);

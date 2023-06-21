@@ -1,12 +1,10 @@
-﻿using Arch.System;
-
-namespace Arch.SystemGroups;
+﻿namespace Arch.SystemGroups;
 
 /// <summary>
 /// Similar to `Arch.System.Group` but with better API that allows pooling
 /// </summary>
 /// <typeparam name="T"></typeparam>
-public class DefaultGroup<T> : CustomGroupBase<T>, ISystem<T>
+public class DefaultGroup<T> : CustomGroupBase<T>
 {
     /// <summary>
     /// Creates an empty group, for auto-generated code only,
@@ -35,27 +33,24 @@ public class DefaultGroup<T> : CustomGroupBase<T>, ISystem<T>
     /// <summary>
     /// To comply with Arch.System.ISystem
     /// </summary>
-    /// <param name="t">Delta time</param>
-    public override void BeforeUpdate(in T t)
+    public override void BeforeUpdate(in T t, bool throttle)
     {
-        BeforeUpdateInternal(in t);
+        BeforeUpdateInternal(in t, throttle);
     }
 
     /// <summary>
     /// To comply with Arch.System.ISystem
     /// </summary>
-    /// <param name="t">Delta time</param>
-    public override void Update(in T t)
+    public override void Update(in T t, bool throttle)
     {
-        UpdateInternal(in t);
+        UpdateInternal(in t, throttle);
     }
     
     /// <summary>
     /// To comply with Arch.System.ISystem
     /// </summary>
-    /// <param name="t">Delta time</param>
-    public override void AfterUpdate(in T t)
+    public override void AfterUpdate(in T t, bool throttle)
     {
-        AfterUpdateInternal(in t);
+        AfterUpdateInternal(in t, throttle);
     }
 }

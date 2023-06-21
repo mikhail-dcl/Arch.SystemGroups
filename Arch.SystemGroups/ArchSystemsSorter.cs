@@ -25,9 +25,9 @@ public static class ArchSystemsSorter
         list.Add(to);
     }
         
-    internal static List<ISystem<float>> SortSystems(Dictionary<Type, ISystem<float>> systems, Dictionary<Type, List<Type>> edges)
+    internal static List<ExecutionNode<float>> SortSystems(Dictionary<Type, ExecutionNode<float>> systems, Dictionary<Type, List<Type>> edges)
     {
-        var result = ListPool<ISystem<float>>.Get();
+        var result = ListPool<ExecutionNode<float>>.Get();
 
         var visited = HashSetPool<Type>.Get();
         
@@ -44,8 +44,8 @@ public static class ArchSystemsSorter
         return result;
     }
 
-    private static Type DFSTraversal(Dictionary<Type, ISystem<float>> systems, Type currentVertex, 
-        HashSet<Type> visited, List<ISystem<float>> result, Dictionary<Type, List<Type>> edges)
+    private static Type DFSTraversal(Dictionary<Type, ExecutionNode<float>> systems, Type currentVertex, 
+        HashSet<Type> visited, List<ExecutionNode<float>> result, Dictionary<Type, List<Type>> edges)
     {
         if (visited.Add(currentVertex))
         {

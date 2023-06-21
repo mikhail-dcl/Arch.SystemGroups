@@ -1,134 +1,131 @@
 using System.Collections.Generic;
+using System.Linq;
 using Arch.System;
 using UnityEngine.Pool;
 
 namespace Arch.SystemGroups;
 
 /// <summary>
-/// The base class that can be used to provide custom behaviour for a group
+///     The base class that can be used to provide custom behaviour for a group
 /// </summary>
 /// <typeparam name="T"></typeparam>
-public abstract class CustomGroupBase<T> : ISystem<T>
+public abstract class CustomGroupBase<T>
 {
-    private List<ISystem<T>> _systems;
-    
     /// <summary>
-    /// Creates an empty group
+    ///     Creates an empty group
     /// </summary>
     protected CustomGroupBase()
     {
     }
-    
-    internal List<ISystem<T>> Systems => _systems;
 
     /// <summary>
-    /// Creates a group from the collection from which a pooled instance of the list will be created
+    ///     Creates a group from the collection from which a pooled instance of the list will be created
+    /// </summary>
+    protected CustomGroupBase(IEnumerable<ISystem<T>> systems, bool throttlingEnabled)
+    {
+        Nodes = ListPool<ExecutionNode<T>>.Get();
+        AddRange(systems.Select(s => new ExecutionNode<T>(s, throttlingEnabled)));
+    }
+
+    internal List<ExecutionNode<T>> Nodes { get; private set; }
+
+    /// <summary>
+    ///     Override to provide Dispose behaviour, you can use <see cref="DisposeInternal" /> as the default implementation
+    /// </summary>
+    public abstract void Dispose();
+
+    /// <summary>
+    ///     Override to provide initialization behaviour, you can use <see cref="InitializeInternal" /> as the default
+    ///     implementation
+    /// </summary>
+    public abstract void Initialize();
+
+    /// <summary>
+    ///     Override to provide BeforeUpdate, you can use <see cref="BeforeUpdateInternal" /> as the default implementation
+    /// </summary>
+    /// <param name="t"></param>
+    /// <param name="throttle">Indicates that the current invocation is throttled</param>
+    public abstract void BeforeUpdate(in T t, bool throttle);
+
+    /// <summary>
+    ///     Override to provide Update behaviour, you can use <see cref="UpdateInternal" /> as the default implementation
+    /// </summary>
+    /// <param name="t"></param>
+    /// <param name="throttle">Indicates that the current invocation is throttled</param>
+    public abstract void Update(in T t, bool throttle);
+
+    /// <summary>
+    ///     Override to provide AfterUpdate behaviour, you can use <see cref="AfterUpdateInternal" /> as the default
+    ///     implementation
+    /// </summary>
+    /// <param name="throttle">Indicates that the current invocation is throttled</param>
+    /// <param name="t"></param>
+    public abstract void AfterUpdate(in T t, bool throttle);
+
+    /// <summary>
+    ///     Adds systems to the group
     /// </summary>
     /// <param name="systems"></param>
-    protected CustomGroupBase(IEnumerable<ISystem<T>> systems)
+    internal void AddRange(IEnumerable<ExecutionNode<T>> systems)
     {
-        _systems = ListPool<ISystem<T>>.Get();
-        AddRange(systems);
+        Nodes.AddRange(systems);
+    }
+
+    internal void SetSystems(List<ExecutionNode<T>> systems)
+    {
+        Nodes = systems;
     }
 
     /// <summary>
-    /// Creates a group from the list that won't be copied
-    /// </summary>
-    /// <param name="systems"></param>
-    protected CustomGroupBase(List<ISystem<T>> systems)
-    {
-        _systems = systems;
-    }
-    
-    /// <summary>
-    /// Adds systems to the group
-    /// </summary>
-    /// <param name="systems"></param>
-    public void AddRange(IEnumerable<ISystem<T>> systems)
-    {
-        _systems.AddRange(systems);
-    }
-    
-    internal void SetSystems(List<ISystem<T>> systems)
-    {
-        _systems = systems;
-    }
-    
-    /// <summary>
-    /// Initialize all systems in the group
+    ///     Initialize all systems in the group
     /// </summary>
     protected void InitializeInternal()
     {
-        foreach (var system in _systems)
-            system.Initialize();
+        foreach (var node in Nodes)
+            node.Initialize();
     }
 
     /// <summary>
-    /// Dispose all systems in the group
+    ///     Dispose all systems in the group
     /// </summary>
     protected void DisposeInternal()
     {
-        foreach (var system in _systems)
-            system.Dispose();
-        
-        ListPool<ISystem<T>>.Release(_systems);
+        foreach (var node in Nodes)
+            node.Dispose();
+
+        ListPool<ExecutionNode<T>>.Release(Nodes);
     }
 
     /// <summary>
-    /// Update all systems
+    ///     Update all systems
     /// </summary>
     /// <param name="t">Delta time</param>
-    protected void BeforeUpdateInternal(in T t)
+    /// <param name="throttle">Current update is throttled</param>
+    protected void BeforeUpdateInternal(in T t, bool throttle)
     {
-        for (int index = 0; index < _systems.Count; ++index)
-            _systems[index].BeforeUpdate(in t);
+        for (var index = 0; index < Nodes.Count; ++index)
+            Nodes[index].BeforeUpdate(in t, throttle);
     }
 
     /// <summary>
-    /// Update all systems
+    ///     Update all systems
     /// </summary>
     /// <param name="t">Delta time</param>
-    protected void UpdateInternal(in T t)
+    /// <param name="throttle">Current update is throttled</param>
+    protected void UpdateInternal(in T t, bool throttle)
     {
-        for (int index = 0; index < _systems.Count; ++index)
-            _systems[index].Update(in t);
+        for (var index = 0; index < Nodes.Count; ++index)
+            Nodes[index].Update(in t, throttle);
     }
-    
+
     /// <summary>
-    /// Update all systems
+    ///     Update all systems
     /// </summary>
     /// <param name="t">Delta time</param>
-    protected void AfterUpdateInternal(in T t)
+    /// <param name="throttle">Current update is throttled</param>
+    protected void AfterUpdateInternal(in T t, bool throttle)
     {
-        for (int index = 0; index < _systems.Count; ++index)
-            _systems[index].AfterUpdate(in t);
+        for (var index = 0; index < Nodes.Count; ++index)
+            Nodes[index].AfterUpdate(in t, throttle);
     }
-    
-    /// <summary>
-    /// Override to provide Dispose behaviour, you can use <see cref="DisposeInternal"/> as the default implementation
-    /// </summary>
-    public abstract void Dispose();
-    
-    /// <summary>
-    /// Override to provide initialization behaviour, you can use <see cref="InitializeInternal"/> as the default implementation
-    /// </summary>
-    public abstract void Initialize();
-    
-    /// <summary>
-    /// Override to provide BeforeUpdate, you can use <see cref="BeforeUpdateInternal"/> as the default implementation
-    /// </summary>
-    /// <param name="t"></param>
-    public abstract void BeforeUpdate(in T t);
-    
-    /// <summary>
-    /// Override to provide Update behaviour, you can use <see cref="UpdateInternal"/> as the default implementation
-    /// </summary>
-    /// <param name="t"></param>
-    public abstract void Update(in T t);
-    
-    /// <summary>
-    /// Override to provide AfterUpdate behaviour, you can use <see cref="AfterUpdateInternal"/> as the default implementation
-    /// </summary>
-    /// <param name="t"></param>
-    public abstract void AfterUpdate(in T t);
 }

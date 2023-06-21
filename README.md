@@ -271,3 +271,13 @@ The API is generated for non-abstract generic and non-generic systems that imple
 5. Call `groupWorld.Initialize()` to recursively initialize systems, it will be called in accordance to `Update Order`
 6. From this point all your systems are attached to the Unity Player Loop
 7. Once the `World` should be disposed, call `groupWorld.Dispose()` to detach systems from the Player Loop
+
+## Centralized Throttling
+In order to minimize CPU impact it might be beneficial to introduce throttling on the [System Groups](#system-groups) level unlike the possibility to do it in `CustomGroups` the logic of which is executed individually per group.
+There are two contracts for that: `IUpdateBasedSystemGroupThrottler` is responsible for systems that are executed with Unity Player Loop Update frequency, and `IFixedUpdateBasedSystemGroupThrottler` for systems that are executed with Unity Player Loop FixedUpdate frequency. 
+
+Just provide them as arguments to the `ArchSystemsWorldBuilder` constructor and they will be executed only once for each [Root System Groups](#system-groups).
+if `ShouldThrottle` returns `true` then the whole graph of the system group is executed in a throttling mode.
+
+Within the same dependency tree systems and groups may have a finely controlled possibility to throttle. It's achieved by annotating a class by the `ThrottlingEnabled` attribute. Thus, it is possible to tell systems in the same group to follow throttling (that is returned by `ShouldThrottle`) or ignore it.
+If the group is annotated with this attribute its children will throttle no matter whether `ThrottlingEnabled` is specified for them or not. 

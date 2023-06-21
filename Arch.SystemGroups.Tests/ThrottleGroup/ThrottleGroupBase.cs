@@ -26,27 +26,27 @@ public abstract class ThrottleGroupBase : CustomGroupBase<float>
         InitializeInternal();
     }
 
-    public override void BeforeUpdate(in float t)
+    public override void BeforeUpdate(in float t, bool throttle)
     {
         // Before Update is always called first in the same frame
         _open = _counter >= _framesToSkip;
         _counter++;
         if (_open)
         {
-            BeforeUpdateInternal(in t);
+            BeforeUpdateInternal(in t, throttle);
             _counter = 0;
         }
     }
 
-    public override void Update(in float t)
+    public override void Update(in float t, bool throttle)
     {
         if (_open)
-            UpdateInternal(in t);
+            UpdateInternal(in t, throttle);
     }
 
-    public override void AfterUpdate(in float t)
+    public override void AfterUpdate(in float t, bool throttle)
     {
         if (_open)
-            AfterUpdateInternal(in t);
+            AfterUpdateInternal(in t, throttle);
     }
 }

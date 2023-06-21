@@ -68,4 +68,9 @@ public struct GroupInfo
     /// The type of the SystemGroup or CustomType
     /// </summary>
     public ITypeSymbol UpdateInGroup { get; set; }
+    
+    /// <summary>
+    /// Throttling enabled for this group
+    /// </summary>
+    public bool ThrottlingEnabled { get; set; }
 }

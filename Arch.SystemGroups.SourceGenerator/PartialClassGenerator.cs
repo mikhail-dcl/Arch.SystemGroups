@@ -8,7 +8,8 @@ namespace Arch.SystemGroups.SourceGenerator;
 
 public static class PartialClassGenerator
 {
-    private const string AttrNamespace = "Arch.SystemGroups";
+    private const string TypesAttrNamespace = "Arch.SystemGroups";
+    private const string ThrottlingNamespace = "Arch.SystemGroups.Throttling";
 
     internal static string ProcessType(ITypeSymbol typeSymbol, WorldsInfo worldsInfo)
     {
@@ -22,7 +23,7 @@ public static class PartialClassGenerator
         // UpdateAfter and UpdateBefore
         var updateAfter = new List<ITypeSymbol>();
         var updateBefore = new List<ITypeSymbol>();
-        GetTypesFromAttributes(typeSymbol, updateAfter, updateBefore);
+        ProcessAttributes(typeSymbol, updateAfter, updateBefore, out bool throttlingEnabled);
 
         var constructors = typeSymbol.GetConstructors().ToImmutableArray();
         
@@ -99,7 +100,8 @@ public static class PartialClassGenerator
                 UpdateAfter = updateAfter,
                 UpdateBefore = updateBefore,
                 ConstructorParams = constructorParams,
-                WorldType = worldType
+                WorldType = worldType,
+                ThrottlingEnabled = throttlingEnabled
             };
             return GetSystemPartialClass(in systemInfo, worldsInfo.GetWorldInfo(worldType));
         }
@@ -114,7 +116,8 @@ public static class PartialClassGenerator
             Behaviour = behaviourInfo,
             UpdateInGroup = updateInGroup,
             UpdateAfter = updateAfter,
-            UpdateBefore = updateBefore
+            UpdateBefore = updateBefore,
+            ThrottlingEnabled = throttlingEnabled
         };
         return GetGroupPartialClass(in groupInfo);
     }
@@ -130,7 +133,7 @@ public static class PartialClassGenerator
         {
             var attrName = attribute.AttributeClass.Name;
             var attrNamespaceName = attribute.AttributeClass.ContainingNamespace.ToString();
-            if (attrNamespaceName == AttrNamespace && attrName == updateInGroupAttrName)
+            if (attrNamespaceName == TypesAttrNamespace && attrName == updateInGroupAttrName)
             {
                 if (attribute.ConstructorArguments[0].Value is ITypeSymbol updateInGroupType)
                     return updateInGroupType;
@@ -140,35 +143,23 @@ public static class PartialClassGenerator
         throw new ArgumentException("UpdateInGroup attribute is not found");
     }
     
-    private static void GetTypesFromAttributes(ITypeSymbol analyzedType, IList<ITypeSymbol> updateAfter, IList<ITypeSymbol> updateBefore)
+    private static void ProcessAttributes(ITypeSymbol analyzedType, IList<ITypeSymbol> updateAfter, IList<ITypeSymbol> updateBefore, out bool throttlingEnabled)
     {
         const string updateAfterAttrName = "UpdateAfterAttribute";
         const string updateBeforeAttrName = "UpdateBeforeAttribute";
+        const string throttlingEnabledAttrName = "ThrottlingEnabledAttribute";
+        
+        throttlingEnabled = false;
 
-        var attributes = analyzedType.GetAttributes();
-        foreach (var attribute in attributes)
-        {
-            var attrName = attribute.AttributeClass.Name;
-            var attrNamespaceName = attribute.AttributeClass.ContainingNamespace.ToString();
-            if (attrNamespaceName == AttrNamespace)
-            {
-                switch (attrName)
-                {
-                    case updateAfterAttrName:
-                    {
-                        if (attribute.ConstructorArguments[0].Value is ITypeSymbol updateAfterType)
-                            updateAfter.Add(updateAfterType);
-                        break;
-                    }
-                    case updateBeforeAttrName:
-                    {
-                        if (attribute.ConstructorArguments[0].Value is ITypeSymbol updateBeforeType)
-                            updateBefore.Add(updateBeforeType);
-                        break;
-                    }
-                }
-            }
-        }
+        var throttling = false;
+        
+        AttributesUtils.DoOnAttributes(analyzedType, 
+            (attr => updateAfter.Add((ITypeSymbol) attr.ConstructorArguments[0].Value), attr => attr.AttributeClass.Name == updateAfterAttrName && attr.AttributeClass.ContainingNamespace.ToString() == TypesAttrNamespace, false),
+            (attr => updateBefore.Add((ITypeSymbol) attr.ConstructorArguments[0].Value), attr => attr.AttributeClass.Name == updateBeforeAttrName && attr.AttributeClass.ContainingNamespace.ToString() == TypesAttrNamespace, false),
+            (_ => throttling = true, attr => attr.AttributeClass.Name == throttlingEnabledAttrName && attr.AttributeClass.ContainingNamespace.ToString() == ThrottlingNamespace, true)
+        );
+
+        throttlingEnabled = throttling;
     }
 
     private static string AccessibilityToString(Accessibility accessibility)

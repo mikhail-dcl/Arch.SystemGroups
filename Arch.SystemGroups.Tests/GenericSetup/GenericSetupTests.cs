@@ -77,13 +77,13 @@ public class GenericSetupTests
         AssertHelpers.AssertOrderOfSystemIsLessThenOtherSystem<InitializationSystemGroup, GenericSystem0<double>, Group1OfGenerics>(world);
 
         var init = world.SystemGroups.OfType<InitializationSystemGroup>().First();
-        var group1 = init.Systems.OfType<Group1OfGenerics>().First();
-        var group2 = init.Systems.OfType<Group2OfGenerics>().First();
+        var group1 = init.Nodes.Find<Group1OfGenerics>();
+        var group2 = init.Nodes.Find<Group2OfGenerics>();
         
         CollectionAssert.AreEquivalent(new List<ISystem<float>>
         {
             _genericSystem3ObjectCustomStruct1TestEnum
-        }, group1.Systems);
+        }, group1.Nodes.Select(n => n.System));
         
         CollectionAssert.AreEquivalent(new List<ISystem<float>>
         {
@@ -92,6 +92,6 @@ public class GenericSetupTests
             _genericSystem2Double,
             _genericSystem1String,
             _genericSystem2CustomStruct1
-        }, group2.Systems);
+        }, group2.Nodes.Select(n => n.System));
     }
 }

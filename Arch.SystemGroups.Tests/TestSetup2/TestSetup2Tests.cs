@@ -63,13 +63,13 @@ public class TestSetup2Tests
         var physicsSystemGroup = world.SystemGroups.OfType<PhysicsSystemGroup>().First();
         
         // group AA
-        var aaSystems = physicsSystemGroup.Systems.OfType<GroupAA>().First().Systems;
+        var aaSystems = physicsSystemGroup.Nodes.Find<GroupAA>().Nodes;
         AssertHelpers.AssertOrderOfSystemIsLessThenOtherSystem<SystemAGroupAA, SystemBGroupAA>(aaSystems);
         AssertHelpers.AssertOrderOfSystemIsLessThenOtherSystem<SystemAGroupAA, SystemCGroupAA>(aaSystems);
         AssertHelpers.AssertOrderOfSystemIsLessThenOtherSystem<SystemBGroupAA, SystemCGroupAA>(aaSystems);
         
         // group AB
-        var abSystems = physicsSystemGroup.Systems.OfType<GroupAB>().First().Systems;
+        var abSystems = physicsSystemGroup.Nodes.Find<GroupAB>().Nodes;
         AssertHelpers.AssertOrderOfSystemIsLessThenOtherSystem<SystemAGroupAB, SystemBGroupAB>(abSystems);
         AssertHelpers.AssertOrderOfSystemIsLessThenOtherSystem<SystemAGroupAB, SystemCGroupAB>(abSystems);
         AssertHelpers.AssertOrderOfSystemIsLessThenOtherSystem<SystemBGroupAB, SystemCGroupAB>(abSystems);
@@ -85,10 +85,10 @@ public class TestSetup2Tests
         Assert.Throws<InvalidOperationException>(() =>
             AssertHelpers.AssertOrderOfSystemIsLessThenOtherSystem<PostRenderingSystemGroup, GroupBB, GroupBC>(world));
 
-        var firstLevelGroups = world.SystemGroups.OfType<PostRenderingSystemGroup>().First().Systems;
+        var firstLevelGroups = world.SystemGroups.OfType<PostRenderingSystemGroup>().First().Nodes;
         
         // group BA
-        var ba = firstLevelGroups.OfType<GroupBA>().First().Systems;
+        var ba = firstLevelGroups.Find<GroupBA>().Nodes;
         AssertHelpers.AssertOrderOfSystemIsLessThenOtherSystem<GroupBAA, GroupBAB>(ba);
         AssertHelpers.AssertOrderOfSystemIsLessThenOtherSystem<SystemAGroupBA, SystemBGroupBA>(ba);
         AssertHelpers.AssertOrderOfSystemIsLessThenOtherSystem<SystemAGroupBA, SystemBGroupBA>(ba);
@@ -99,11 +99,11 @@ public class TestSetup2Tests
         AssertHelpers.AssertOrderOfSystemIsLessThenOtherSystem<SystemCGroupBA, SystemDGroupBA>(ba);
         
         // group BB
-        var bb = firstLevelGroups.OfType<GroupBB>().First().Systems;
+        var bb = firstLevelGroups.Find<GroupBB>().Nodes;
         AssertHelpers.AssertOrderOfSystemIsLessThenOtherSystem<SystemAGroupBB, SystemBGroupBB>(bb);
         
         // group BAA
-        var baa = ba.OfType<GroupBAA>().First().Systems;
+        var baa = ba.Find<GroupBAA>().Nodes;
         AssertHelpers.AssertOrderOfSystemIsLessThenOtherSystem<SystemAGroupBAA, SystemBGroupBAA>(baa);
         AssertHelpers.AssertOrderOfSystemIsLessThenOtherSystem<SystemAGroupBAA, SystemCGroupBAA>(baa);
         AssertHelpers.AssertOrderOfSystemIsLessThenOtherSystem<SystemBGroupBAA, SystemCGroupBAA>(baa);

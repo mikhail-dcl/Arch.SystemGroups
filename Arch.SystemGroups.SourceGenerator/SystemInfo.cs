@@ -57,5 +57,10 @@ namespace Arch.SystemGroups.SourceGenerator
         /// Type of the world if the class implements BaseSystem{W,T}'2
         /// </summary>
         public ITypeSymbol WorldType { get; set; }
+        
+        /// <summary>
+        /// Throttling enabled for this system
+        /// </summary>
+        public bool ThrottlingEnabled { get; set; }
     }
 }

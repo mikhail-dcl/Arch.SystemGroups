@@ -27,12 +27,9 @@ public class ThrottleGroupTests
     public void BuildsHierarchy()
     {
         var world = _worldBuilder.Finish();
-
-        CollectionAssert.AreEquivalent(new[] { typeof(ThrottleSimulationGroup) },
-            world.SystemGroups.OfType<SimulationSystemGroup>().First().Systems.Select(s => s.GetType()));
-
-        CollectionAssert.AreEquivalent(new[] { typeof(ThrottlePostRenderingGroup) },
-            world.SystemGroups.OfType<PostRenderingSystemGroup>().First().Systems.Select(s => s.GetType()));
+        
+        AssertHelpers.AssertNodesEquivalency(world.SystemGroups.OfType<SimulationSystemGroup>().First().Nodes, typeof(ThrottleSimulationGroup));
+        AssertHelpers.AssertNodesEquivalency(world.SystemGroups.OfType<PostRenderingSystemGroup>().First().Nodes, typeof(ThrottlePostRenderingGroup));
     }
 
     [Test]

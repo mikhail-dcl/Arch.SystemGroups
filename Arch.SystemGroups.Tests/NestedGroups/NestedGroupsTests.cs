@@ -27,17 +27,17 @@ public class NestedGroupsTests
         var world = _worldBuilder.Finish();
 
         var simGroup = world.SystemGroups.OfType<SimulationSystemGroup>().First();
-        var firstLevel = simGroup.Systems;
+        var firstLevel = simGroup.Nodes;
         
-        CollectionAssert.AreEquivalent(new[] {typeof(RootGroup)}, firstLevel.Select(s => s.GetType()));
+        AssertHelpers.AssertNodesEquivalency(firstLevel, typeof(RootGroup));
         
-        var secondLevel = firstLevel.OfType<RootGroup>().First().Systems;
-        CollectionAssert.AreEquivalent(new[] {typeof(NestedGroup1)}, secondLevel.Select(s => s.GetType()));
+        var secondLevel = firstLevel.Find<RootGroup>().Nodes;
+        AssertHelpers.AssertNodesEquivalency(secondLevel, typeof(NestedGroup1));
 
-        var thirdLevel = secondLevel.OfType<NestedGroup1>().First().Systems;
-        CollectionAssert.AreEquivalent(new[] {typeof(NestedGroup2)}, thirdLevel.Select(s => s.GetType()));
+        var thirdLevel = secondLevel.Find<NestedGroup1>().Nodes;
+        AssertHelpers.AssertNodesEquivalency(thirdLevel, typeof(NestedGroup2));
         
-        var forthLevel = thirdLevel.OfType<NestedGroup2>().First().Systems;
-        CollectionAssert.AreEquivalent(new[] {typeof(SystemInNestedGroup)}, forthLevel.Select(s => s.GetType()));
+        var forthLevel = thirdLevel.Find<NestedGroup2>().Nodes;
+        AssertHelpers.AssertNodesEquivalency(forthLevel, typeof(SystemInNestedGroup));
     } 
 }

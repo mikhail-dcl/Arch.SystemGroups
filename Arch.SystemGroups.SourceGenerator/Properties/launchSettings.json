@@ -2,7 +2,7 @@
   "profiles": {
     "Profile 1": {
       "commandName": "DebugRoslynComponent",
-      "targetProject": "..\\Arch.SystemGroups.SourcesGenerator.Samples\\Arch.SystemGroups.SourcesGenerator.Samples.csproj"
+      "targetProject": "..\\Arch.SystemGroups.Tests\\Arch.SystemGroups.Tests.csproj"
     }
   }
 }

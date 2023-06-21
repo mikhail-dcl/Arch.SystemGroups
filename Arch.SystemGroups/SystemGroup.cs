@@ -2,6 +2,9 @@ using System;
 using System.Buffers;
 using System.Collections.Generic;
 using Arch.System;
+using Arch.SystemGroups.Throttling;
+using Arch.SystemGroups.UnityBridge;
+using JetBrains.Annotations;
 using UnityEngine.Pool;
 
 namespace Arch.SystemGroups;
@@ -13,43 +16,53 @@ namespace Arch.SystemGroups;
 /// </summary>
 public abstract class SystemGroup : IDisposable
 {
-    private readonly List<ISystem<float>> _systems;
-    internal SystemGroup(List<ISystem<float>> systems)
+    private readonly List<ExecutionNode<float>> _nodes;
+    private readonly ISystemGroupThrottler _throttler;
+
+    private readonly Type _type;
+
+    internal SystemGroup(List<ExecutionNode<float>> nodes, [CanBeNull] ISystemGroupThrottler throttler)
     {
-        _systems = systems;
+        _nodes = nodes;
+        _throttler = throttler;
+        _type = GetType();
     }
     
-    internal List<ISystem<float>> Systems => _systems;
+    internal List<ExecutionNode<float>> Nodes => _nodes;
 
     internal abstract void Update();
 
-    private protected void Update(float deltaTime)
+    private protected void Update(in TimeProvider.Info timeInfo)
     {
-        if (_systems == null) return;
+        if (_nodes == null) return;
         
-        if (_systems.Count == 0) return;
+        if (_nodes.Count == 0) return;
+
+        var throttle = _throttler != null && _throttler.ShouldThrottle(_type, in timeInfo);
         
-        foreach (var system in _systems)
+        foreach (var system in _nodes)
         {
-            system.BeforeUpdate(deltaTime);
+            system.BeforeUpdate(in timeInfo.DeltaTime, throttle);
         }
         
-        foreach (var system in _systems)
+        foreach (var system in _nodes)
         {
-            system.Update(deltaTime);
+            system.Update(in timeInfo.DeltaTime, throttle);
         }
         
-        foreach (var system in _systems)
+        foreach (var system in _nodes)
         {
-            system.AfterUpdate(deltaTime);
+            system.AfterUpdate(in timeInfo.DeltaTime, throttle);
         }
+        
+        _throttler?.OnSystemGroupUpdateFinished(_type, throttle);
     }
 
     internal void Initialize()
     {
-        if (_systems == null) return;
+        if (_nodes == null) return;
         
-        foreach (var system in _systems)
+        foreach (var system in _nodes)
             system.Initialize();
     }
 
@@ -59,10 +72,10 @@ public abstract class SystemGroup : IDisposable
     /// </summary>
     public void Dispose()
     {
-        if (_systems == null) return;
+        if (_nodes == null) return;
         
-        foreach (var system in _systems)
+        foreach (var system in _nodes)
             system.Dispose();
-        ListPool<ISystem<float>>.Release(_systems);
+        ListPool<ExecutionNode<float>>.Release(_nodes);
     }
 }
