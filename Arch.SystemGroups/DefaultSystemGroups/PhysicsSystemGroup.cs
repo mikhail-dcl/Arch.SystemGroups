@@ -12,11 +12,11 @@ namespace Arch.SystemGroups.DefaultSystemGroups;
 /// </summary>
 public class PhysicsSystemGroup : SystemGroup
 {
-    internal PhysicsSystemGroup(List<ExecutionNode<float>> systems, [CanBeNull] ISystemGroupThrottler throttler) : base(systems, throttler)
+    internal PhysicsSystemGroup(List<ExecutionNode<float>> nodes, [CanBeNull] ISystemGroupThrottler throttler, [CanBeNull] ISystemGroupExceptionHandler exceptionHandler) : base(nodes, throttler, exceptionHandler)
     {
     }
     
-    internal static readonly PhysicsSystemGroup Empty = new (null, null);
+    internal static readonly PhysicsSystemGroup Empty = new (null, null, null);
 
     internal override void Update()
     {

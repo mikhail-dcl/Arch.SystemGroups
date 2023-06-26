@@ -39,6 +39,7 @@ public class CentralizedThrottlingTests
         _throttler.ShouldThrottle(Arg.Any<Type>(), Arg.Any<TimeProvider.Info>()).Returns(false);
 
         var world = _worldBuilder.Finish();
+        world.Initialize();
 
         world.SystemGroups.OfType<SimulationSystemGroup>().First().Update();
         
@@ -55,6 +56,7 @@ public class CentralizedThrottlingTests
         _throttler.ShouldThrottle(Arg.Any<Type>(), Arg.Any<TimeProvider.Info>()).Returns(true);
 
         var world = _worldBuilder.Finish();
+        world.Initialize();
 
         world.SystemGroups.OfType<SimulationSystemGroup>().First().Update();
         

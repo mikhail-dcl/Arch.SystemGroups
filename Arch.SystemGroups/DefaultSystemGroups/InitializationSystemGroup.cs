@@ -1,6 +1,4 @@
-using System;
 using System.Collections.Generic;
-using Arch.System;
 using Arch.SystemGroups.Throttling;
 using Arch.SystemGroups.UnityBridge;
 using JetBrains.Annotations;
@@ -12,14 +10,16 @@ namespace Arch.SystemGroups.DefaultSystemGroups;
 /// </summary>
 public class InitializationSystemGroup : SystemGroup
 {
-    internal InitializationSystemGroup(List<ExecutionNode<float>> systems, [CanBeNull] ISystemGroupThrottler throttler) : base(systems, throttler)
+    internal InitializationSystemGroup(List<ExecutionNode<float>> nodes, [CanBeNull] ISystemGroupThrottler throttler, [CanBeNull] ISystemGroupExceptionHandler exceptionHandler) : base(nodes, throttler, exceptionHandler)
     {
     }
     
-    internal static readonly InitializationSystemGroup Empty = new (null, null);
+    internal static readonly InitializationSystemGroup Empty = new (null, null, null);
 
     internal override void Update()
     {
         Update(TimeProvider.GetInfo());
     }
+
+    
 }

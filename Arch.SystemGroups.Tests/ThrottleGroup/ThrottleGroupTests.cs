@@ -51,7 +51,8 @@ public class ThrottleGroupTests
                 systemGroups.Add(c.ArgAt<PostRenderingSystemGroup>(3));
             });
         
-        _worldBuilder.Finish();
+        var world = _worldBuilder.Finish();
+        world.Initialize();
 
         for (var i = 0; i < 10; i++)
         {
@@ -99,7 +100,8 @@ public class ThrottleGroupTests
                 systemGroups.Add(c.ArgAt<SimulationSystemGroup>(1));
             });
         
-        _worldBuilder.Finish();
+        var world = _worldBuilder.Finish();
+        world.Initialize();
         
         for (var i = 0; i < framesToRun; i++)
         {

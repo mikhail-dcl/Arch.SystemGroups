@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using Arch.System;
 using Arch.SystemGroups.Throttling;
 using Arch.SystemGroups.UnityBridge;
 using JetBrains.Annotations;
@@ -11,11 +10,12 @@ namespace Arch.SystemGroups.DefaultSystemGroups;
 /// </summary>
 public class SimulationSystemGroup : SystemGroup
 {
-    internal SimulationSystemGroup(List<ExecutionNode<float>> systems, [CanBeNull] ISystemGroupThrottler throttler) : base(systems, throttler)
+    internal SimulationSystemGroup(List<ExecutionNode<float>> systems, [CanBeNull] ISystemGroupThrottler throttler,
+        [CanBeNull] ISystemGroupExceptionHandler exceptionHandler) : base(systems, throttler, exceptionHandler)
     {
     }
     
-    internal static readonly SimulationSystemGroup Empty = new (null, null);
+    internal static readonly SimulationSystemGroup Empty = new (null, null, null);
 
     internal override void Update()
     {

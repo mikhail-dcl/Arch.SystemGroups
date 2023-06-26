@@ -26,6 +26,7 @@ public readonly struct ArchSystemsWorldBuilder<T>
 
     private readonly IFixedUpdateBasedSystemGroupThrottler _fixedUpdateBasedSystemGroupThrottler;
     private readonly IUpdateBasedSystemGroupThrottler _updateBasedSystemGroupThrottler;
+    private readonly ISystemGroupExceptionHandler _exceptionHandler;
 
     /// <summary>
     ///     Create a systems builder for the given world
@@ -33,20 +34,24 @@ public readonly struct ArchSystemsWorldBuilder<T>
     /// <param name="world">ECS World (Normally "Arch.Core.World")</param>
     /// <param name="fixedUpdateBasedSystemGroupThrottler">Throttler for all Fixed Update based Systems</param>
     /// <param name="updateBasedSystemGroupThrottler">Throttler for all Update based Systems</param>
+    /// <param name="exceptionHandler">Exception handler</param>
     public ArchSystemsWorldBuilder(T world, IFixedUpdateBasedSystemGroupThrottler fixedUpdateBasedSystemGroupThrottler = null,
-        IUpdateBasedSystemGroupThrottler updateBasedSystemGroupThrottler = null) : this(world,
+        IUpdateBasedSystemGroupThrottler updateBasedSystemGroupThrottler = null,
+        ISystemGroupExceptionHandler exceptionHandler = null) : this(world,
         UnityPlayerLoopHelper.Wrapper.Instance, fixedUpdateBasedSystemGroupThrottler, updateBasedSystemGroupThrottler)
     {
     }
 
     internal ArchSystemsWorldBuilder(T world, IUnityPlayerLoopHelper unityPlayerLoopHelper,
         IFixedUpdateBasedSystemGroupThrottler fixedUpdateBasedSystemGroupThrottler = null,
-        IUpdateBasedSystemGroupThrottler updateBasedSystemGroupThrottler = null)
+        IUpdateBasedSystemGroupThrottler updateBasedSystemGroupThrottler = null,
+        ISystemGroupExceptionHandler exceptionHandler = null)
     {
         World = world;
         _unityPlayerLoopHelper = unityPlayerLoopHelper;
         _fixedUpdateBasedSystemGroupThrottler = fixedUpdateBasedSystemGroupThrottler;
         _updateBasedSystemGroupThrottler = updateBasedSystemGroupThrottler;
+        _exceptionHandler = exceptionHandler;
 
         _groupsInfo = DictionaryPool<Type, GroupInfo>.Get();
         _customGroups = DictionaryPool<Type, CustomGroupBase<float>>.Get();
@@ -184,32 +189,32 @@ public readonly struct ArchSystemsWorldBuilder<T>
 
     private PostPhysicsSystemGroup CreatePostPhysicsSystemGroup(List<ExecutionNode<float>> list)
     {
-        return new PostPhysicsSystemGroup(list, _fixedUpdateBasedSystemGroupThrottler);
+        return new PostPhysicsSystemGroup(list, _fixedUpdateBasedSystemGroupThrottler, _exceptionHandler);
     }
 
     private PhysicsSystemGroup CreatePhysicsSystemGroup(List<ExecutionNode<float>> list)
     {
-        return new PhysicsSystemGroup(list, _fixedUpdateBasedSystemGroupThrottler);
+        return new PhysicsSystemGroup(list, _fixedUpdateBasedSystemGroupThrottler, _exceptionHandler);
     }
 
     private PostRenderingSystemGroup CreatePostRenderingSystemGroup(List<ExecutionNode<float>> list)
     {
-        return new PostRenderingSystemGroup(list, _updateBasedSystemGroupThrottler);
+        return new PostRenderingSystemGroup(list, _updateBasedSystemGroupThrottler, _exceptionHandler);
     }
 
     private PresentationSystemGroup CreatePresentationSystemGroup(List<ExecutionNode<float>> list)
     {
-        return new PresentationSystemGroup(list, _updateBasedSystemGroupThrottler);
+        return new PresentationSystemGroup(list, _updateBasedSystemGroupThrottler, _exceptionHandler);
     }
 
     private SimulationSystemGroup CreateSimulationSystemGroup(List<ExecutionNode<float>> list)
     {
-        return new SimulationSystemGroup(list, _updateBasedSystemGroupThrottler);
+        return new SimulationSystemGroup(list, _updateBasedSystemGroupThrottler, _exceptionHandler);
     }
 
     private InitializationSystemGroup CreateInitializationSystemGroup(List<ExecutionNode<float>> list)
     {
-        return new InitializationSystemGroup(list, _updateBasedSystemGroupThrottler);
+        return new InitializationSystemGroup(list, _updateBasedSystemGroupThrottler, _exceptionHandler);
     }
 
     private void CreateSystemGroup<TGroup>(ref TGroup group, Func<List<ExecutionNode<float>>, TGroup> constructor)

@@ -281,3 +281,10 @@ if `ShouldThrottle` returns `true` then the whole graph of the system group is e
 
 Within the same dependency tree systems and groups may have a finely controlled possibility to throttle. It's achieved by annotating a class by the `ThrottlingEnabled` attribute. Thus, it is possible to tell systems in the same group to follow throttling (that is returned by `ShouldThrottle`) or ignore it.
 If the group is annotated with this attribute its children will throttle no matter whether `ThrottlingEnabled` is specified for them or not. 
+
+## Exceptions Handling
+Similar to every other native callback (`Update`, `LateUpdate`, `Awake`, etc) Unity invokes `Player Loop` delegates as isolated calls. 
+Thus, if an exception occurs it does not break the whole loop but the current step only. In terms of system groups it means that the whole root group will skip an execution frame starting from the exception onwards. 
+It might be not exactly what a user expects when they introduce a systems pipeline.
+
+In order to customize this behaviour it is possible to provide an implementation of `ISystemGroupExceptionHandler` to the `ArchSystemsWorldBuilder` constructor so it can tell the whole world what to do if an exception occurs: `Keep running`, `Suspend` or `Dispose`.

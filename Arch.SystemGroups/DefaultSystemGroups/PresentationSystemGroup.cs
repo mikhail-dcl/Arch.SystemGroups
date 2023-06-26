@@ -11,11 +11,12 @@ namespace Arch.SystemGroups.DefaultSystemGroups;
 /// </summary>
 public class PresentationSystemGroup : SystemGroup
 {
-    internal PresentationSystemGroup(List<ExecutionNode<float>> systems, [CanBeNull] ISystemGroupThrottler throttler) : base(systems, throttler)
+    internal PresentationSystemGroup(List<ExecutionNode<float>> systems, [CanBeNull] ISystemGroupThrottler throttler,
+        [CanBeNull] ISystemGroupExceptionHandler exceptionHandler) : base(systems, throttler, exceptionHandler)
     {
     }
     
-    internal static readonly PresentationSystemGroup Empty = new (null, null);
+    internal static readonly PresentationSystemGroup Empty = new (null, null, null);
 
     internal override void Update()
     {
