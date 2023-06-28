@@ -4,7 +4,7 @@
 /// Similar to `Arch.System.Group` but with better API that allows pooling
 /// </summary>
 /// <typeparam name="T"></typeparam>
-public class DefaultGroup<T> : CustomGroupBase<T>
+public abstract class DefaultGroup<T> : CustomGroupBase<T>
 {
     /// <summary>
     /// Creates an empty group, for auto-generated code only,

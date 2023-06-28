@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Arch.System;
+using Arch.SystemGroups.Metadata;
 using UnityEngine.Pool;
 
 namespace Arch.SystemGroups;
@@ -128,4 +129,10 @@ public abstract class CustomGroupBase<T>
         for (var index = 0; index < Nodes.Count; ++index)
             Nodes[index].AfterUpdate(in t, throttle);
     }
+    
+    /// <summary>
+    ///    The metadata of the group in an abstract form
+    /// </summary>
+    /// <returns></returns>
+    protected abstract AttributesInfoBase GetMetadataInternal();
 }

@@ -38,7 +38,7 @@ public readonly struct ArchSystemsWorldBuilder<T>
     public ArchSystemsWorldBuilder(T world, IFixedUpdateBasedSystemGroupThrottler fixedUpdateBasedSystemGroupThrottler = null,
         IUpdateBasedSystemGroupThrottler updateBasedSystemGroupThrottler = null,
         ISystemGroupExceptionHandler exceptionHandler = null) : this(world,
-        UnityPlayerLoopHelper.Wrapper.Instance, fixedUpdateBasedSystemGroupThrottler, updateBasedSystemGroupThrottler)
+        UnityPlayerLoopHelper.Wrapper.Instance, fixedUpdateBasedSystemGroupThrottler, updateBasedSystemGroupThrottler, exceptionHandler)
     {
     }
 

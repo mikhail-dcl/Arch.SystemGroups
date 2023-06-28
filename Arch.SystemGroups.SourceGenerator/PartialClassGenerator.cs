@@ -54,9 +54,9 @@ public static class PartialClassGenerator
         var isSystem = typeSymbol.AllInterfaces.Any(x => x.IsGenericType && x.ContainingNamespace.ToString() == "Arch.System" 
                         && x.Name == "ISystem" && x.TypeArguments.Length == 1 && x.TypeArguments[0].Name is "Single" or "float");
 
-        var behaviourInfo = GetGroupBehaviourInfo(typeSymbol);
+        var groupBehaviourInfo = GetGroupBehaviourInfo(typeSymbol);
         
-        if (isSystem && !behaviourInfo.IsCustom)
+        if (isSystem && !groupBehaviourInfo.IsCustom)
         {
             // Find the first constructor, ignore other constructors
             // If there is no explicit constructor there is always one empty constructor with no parameters
@@ -88,6 +88,22 @@ public static class PartialClassGenerator
             }
 
             constructorParams = constructorParams.RemoveAt(0);
+            
+            bool InheritsFromPlayerLoopSystem(ITypeSymbol currentType)
+            {
+                var baseType = currentType.BaseType;
+                
+                if (baseType == null)
+                    return false;
+                
+                if (baseType.IsGenericType && baseType.ContainingNamespace.ToString() == "Arch.SystemGroups" 
+                    && baseType.Name == "PlayerLoopSystem" && baseType.TypeArguments.Length == 1)
+                    return true;
+
+                return InheritsFromPlayerLoopSystem(baseType);
+            }
+            
+            var inheritsFromPlayerLoopSystem = InheritsFromPlayerLoopSystem(typeSymbol);
 
             var systemInfo = new SystemInfo
             {
@@ -101,7 +117,8 @@ public static class PartialClassGenerator
                 UpdateBefore = updateBefore,
                 ConstructorParams = constructorParams,
                 WorldType = worldType,
-                ThrottlingEnabled = throttlingEnabled
+                ThrottlingEnabled = throttlingEnabled,
+                InheritsFromPlayerLoopSystem = inheritsFromPlayerLoopSystem
             };
             return GetSystemPartialClass(in systemInfo, worldsInfo.GetWorldInfo(worldType));
         }
@@ -113,7 +130,7 @@ public static class PartialClassGenerator
             Namespace = namespc,
             AccessModifier = accessModifier,
             ClassName = className,
-            Behaviour = behaviourInfo,
+            Behaviour = groupBehaviourInfo,
             UpdateInGroup = updateInGroup,
             UpdateAfter = updateAfter,
             UpdateBefore = updateBefore,
@@ -195,6 +212,12 @@ public static class PartialClassGenerator
         
         if (!systemInfo.This.IsGenericType())
             worldInfo.AddSystem(systemInfo.This, systemInfo.ConstructorParams, injectToWorldMethodParams, passArguments);
+
+        var metadata = MetadataGenerator.GenerateAttributesInfo(systemInfo.This, systemInfo.UpdateInGroup);
+        
+        var getMetadataOverride = systemInfo.InheritsFromPlayerLoopSystem
+            ? "protected override AttributesInfoBase GetMetadataInternal() => Metadata;"
+            : string.Empty;
         
         var template =
             $$"""
@@ -202,6 +225,7 @@ public static class PartialClassGenerator
             using System.Collections.Generic;
             using Arch.SystemGroups.DefaultSystemGroups;
             using Arch.SystemGroups;
+            using Arch.SystemGroups.Metadata;
 
             {{(!systemInfo.IsGlobalNamespace ? $"namespace {systemInfo.Namespace} {{" : "")}}
 
@@ -230,6 +254,11 @@ public static class PartialClassGenerator
                 {
                     {{addEdgesBody}}
                 }
+
+                {{metadata}}
+
+                {{getMetadataOverride}}
+
             {{(!systemInfo.IsGlobalNamespace ? "}" : "")}}
             }
             """;
@@ -247,12 +276,15 @@ public static class PartialClassGenerator
         var createGroup = CreateGroupGenerator.GetTryGetCreateGroup(in groupInfo);
         var customBehaviour = groupInfo.Behaviour.IsCustom;
         
+        var metadata = MetadataGenerator.GenerateAttributesInfo(groupInfo.This, groupInfo.UpdateInGroup);
+        
         var template =
             $$"""
             using System;
             using System.Collections.Generic;
             using Arch.System;
             using Arch.SystemGroups;
+            using Arch.SystemGroups.Metadata;
 
             {{(!groupInfo.IsGlobalNamespace ? $"namespace {groupInfo.Namespace} {{" : "")}}
                 {{groupInfo.AccessModifier}} partial class {{groupInfo.ClassName}}{{(customBehaviour ? string.Empty : ": DefaultGroup<float>")}} {
@@ -269,6 +301,11 @@ public static class PartialClassGenerator
                 {
                     {{addEdgesBody}}
                 }
+
+                {{metadata}}
+
+                protected override AttributesInfoBase GetMetadataInternal() => Metadata;
+
             {{(!groupInfo.IsGlobalNamespace ? "}" : "")}}
             }
             """;

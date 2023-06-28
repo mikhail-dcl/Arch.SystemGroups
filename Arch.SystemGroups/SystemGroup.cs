@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Arch.SystemGroups.Metadata;
 using Arch.SystemGroups.Throttling;
 using Arch.SystemGroups.UnityBridge;
 using JetBrains.Annotations;
@@ -51,6 +52,8 @@ public abstract class SystemGroup : IDisposable
         _exceptionHandler = exceptionHandler;
         _type = GetType();
     }
+    
+    public static SystemGroupAttributesInfo Metadata = SystemGroupAttributesInfo.Instance;
 
     internal State CurrentState { get; private set; } = State.NotInitialized;
 

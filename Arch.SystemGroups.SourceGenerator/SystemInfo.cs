@@ -32,6 +32,11 @@ namespace Arch.SystemGroups.SourceGenerator
         public string ClassName { get; set; }
         
         /// <summary>
+        /// Inherits from PlayerLoopSystem
+        /// </summary>
+        public bool InheritsFromPlayerLoopSystem { get; set; }
+        
+        /// <summary>
         /// Multiple Attributes that are used to define the order of the system.
         /// [UpdateBefore(typeof(CustomSystem))]
         /// </summary>

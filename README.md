@@ -288,3 +288,12 @@ Thus, if an exception occurs it does not break the whole loop but the current st
 It might be not exactly what a user expects when they introduce a systems pipeline.
 
 In order to customize this behaviour it is possible to provide an implementation of `ISystemGroupExceptionHandler` to the `ArchSystemsWorldBuilder` constructor so it can tell the whole world what to do if an exception occurs: `Keep running`, `Suspend` or `Dispose`.
+
+## Metadata
+As the source generator in the project already operates with attributes it exposes such information to the user so it is possible get attributes data without reflection.
+For every system and group a custom class inherited from `AttributesInfoBase` is generated.
+
+It is possible to access it in two ways:
+1. Use a strongly-typed static `Metadata` field. The instance is created lazily upon the first retrieval. So if it is not used no memory overhead will present.
+2. If a system inherits from `PlayerLoopSystem<TWorld>` the overriden method `protected abstract AttributesInfoBase GetMetadataInternal();` will be generated providing the access to the `AttributesInfo` class instance.
+From this point `T GetAttribute<T>()` and `IReadOnlyList<T> GetAttributes<T>()` methods are available. They don't rely on reflection either so the performance is similar to a simple `switch`/`if` expression.

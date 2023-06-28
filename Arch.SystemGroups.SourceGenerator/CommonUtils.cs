@@ -3,11 +3,38 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 
 namespace Arch.SystemGroups.SourceGenerator;
 
 public static class CommonUtils
 {
+    /// <summary>
+    /// uses the logic of <see cref="TypedConstantExtensions.ToCSharpString"/>
+    /// fixed representation of types that are not converted properly 
+    /// </summary>
+    /// <param name="constant"></param>
+    /// <returns></returns>
+    public static string ToCSharpStringSemanticallyValid(this TypedConstant constant)
+    {
+        if (constant.IsNull)
+            return "null";
+
+        var str = constant.ToCSharpString();
+        
+        // fix array
+        if (constant.Kind == TypedConstantKind.Array)
+            return "new []" + str;
+        
+        return constant.Type.SpecialType switch
+        {
+            SpecialType.System_Single => str + "F",
+            SpecialType.System_Double => str + "D",
+            SpecialType.System_Delegate => str + "M",
+            _ => str
+        };
+    }
+    
     /// <summary>
     ///     Convert a <see cref="RefKind"/> to its code string equivalent.
     /// </summary>
