@@ -268,9 +268,18 @@ The API is generated for non-abstract generic and non-generic systems that imple
      > For generic systems such extensions are not generated. You will have to use the `Factory Method` or `AddSystem` extension
 3. Add as many systems as needed
 4. Call `var groupWorld = worldBuilder.Finish()` to create all groups and systems, and sort them
-5. Call `groupWorld.Initialize()` to recursively initialize systems, it will be called in accordance to `Update Order`
-6. From this point all your systems are attached to the Unity Player Loop
-7. Once the `World` should be disposed, call `groupWorld.Dispose()` to detach systems from the Player Loop
+5. When the world creation is finalized, system groups are added to the `Aggregate` which in turn is attached to the Player Loop.
+   
+   By default it is assumed that the order in which system groups within the same player loop stage are executed is irrelevant.
+   However, it might be beneficial to customize it: e.g. in case there is a reliance on the execution order or the worlds have different priority.
+   
+   It's achieved by passing an implementation of `ISystemGroupAggregate<T>.IFactory` along the data unique for the given world to the `Finish<TAggregationData>(ISystemGroupAggregate<TAggregationData>.IFactory aggregateFactory, TAggregationData aggregationData)` method. 
+ 
+   You can take a look at `OrderedSystemGroupAggregate<T>` as a reference. it uses `T` and `IComparer<T>` to sort system groups being added to and removed from the aggregate according to data passed on worlds creation.
+    
+6. Call `groupWorld.Initialize()` to recursively initialize systems, it will be called in accordance to `Update Order`
+7. From this point all your systems are attached to the Unity Player Loop
+8. Once the `World` should be disposed, call `groupWorld.Dispose()` to detach systems from the Player Loop
 
 ## Centralized Throttling
 In order to minimize CPU impact it might be beneficial to introduce throttling on the [System Groups](#system-groups) level unlike the possibility to do it in `CustomGroups` the logic of which is executed individually per group.

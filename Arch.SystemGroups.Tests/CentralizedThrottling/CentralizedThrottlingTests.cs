@@ -24,7 +24,7 @@ public class CentralizedThrottlingTests
     {
         _throttler = Substitute.For<IUpdateBasedSystemGroupThrottler>();
 
-        _worldBuilder = new ArchSystemsWorldBuilder<TestWorld>(new TestWorld(), Substitute.For<IUnityPlayerLoopHelper>(), updateBasedSystemGroupThrottler: _throttler);
+        _worldBuilder = new ArchSystemsWorldBuilder<TestWorld>(new TestWorld(), Substitute.For<IPlayerLoop>(), updateBasedSystemGroupThrottler: _throttler);
         
         _noThrottlingRootSystem = NoThrottlingRootSystem.InjectToWorld(ref _worldBuilder);
         _throttlingRootSystem = ThrottlingRootSystem.InjectToWorld(ref _worldBuilder);

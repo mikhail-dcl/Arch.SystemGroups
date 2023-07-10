@@ -15,6 +15,9 @@ namespace Arch.SystemGroups;
 /// </summary>
 public abstract class SystemGroup : IDisposable
 {
+    /// <summary>
+    ///     State of the system group
+    /// </summary>
     public enum State : byte
     {
         /// <summary>
@@ -38,6 +41,11 @@ public abstract class SystemGroup : IDisposable
         Disposed
     }
 
+    /// <summary>
+    ///     An empty shared instance of attributes metadata
+    /// </summary>
+    public static SystemGroupAttributesInfo Metadata = SystemGroupAttributesInfo.Instance;
+
     private readonly ISystemGroupExceptionHandler _exceptionHandler;
 
     private readonly ISystemGroupThrottler _throttler;
@@ -52,12 +60,25 @@ public abstract class SystemGroup : IDisposable
         _exceptionHandler = exceptionHandler;
         _type = GetType();
     }
-    
-    public static SystemGroupAttributesInfo Metadata = SystemGroupAttributesInfo.Instance;
 
     internal State CurrentState { get; private set; } = State.NotInitialized;
 
     internal List<ExecutionNode<float>> Nodes { get; }
+
+    /// <summary>
+    ///     Dispose all systems and release the list allocated for them.
+    ///     After the dispose is called the instance of the group is no longer usable.
+    /// </summary>
+    public void Dispose()
+    {
+        if (Nodes == null) return;
+        if (CurrentState == State.Disposed) return;
+
+        foreach (var system in Nodes)
+            system.Dispose();
+        ListPool<ExecutionNode<float>>.Release(Nodes);
+        CurrentState = State.Disposed;
+    }
 
     internal abstract void Update();
 
@@ -92,7 +113,7 @@ public abstract class SystemGroup : IDisposable
         {
             if (_exceptionHandler == null)
                 throw;
-            
+
             switch (_exceptionHandler.Handle(e, _type))
             {
                 case ISystemGroupExceptionHandler.Action.Suspend:
@@ -115,20 +136,5 @@ public abstract class SystemGroup : IDisposable
 
         foreach (var system in Nodes)
             system.Initialize();
-    }
-    
-    /// <summary>
-    ///     Dispose all systems and release the list allocated for them.
-    ///     After the dispose is called the instance of the group is no longer usable.
-    /// </summary>
-    public void Dispose()
-    {
-        if (Nodes == null) return;
-        if (CurrentState == State.Disposed) return;
-
-        foreach (var system in Nodes)
-            system.Dispose();
-        ListPool<ExecutionNode<float>>.Release(Nodes);
-        CurrentState = State.Disposed;
     }
 }

@@ -11,7 +11,7 @@ public class TestSetup1Tests
     private CustomSystem1InCustomGroup1 _customSystem1InCustomGroup1;
     private CustomSystemWithParameters1 _customSystemWithParameters1;
     private CustomSystemWithParameters2 _customSystemWithParameters2;
-    private IUnityPlayerLoopHelper? _loopHelper;
+    private IPlayerLoop _playerLoop;
     private ArchSystemsWorldBuilder<TestWorld> _worldBuilder;
 
     [SetUp]
@@ -19,7 +19,7 @@ public class TestSetup1Tests
     {
         _worldBuilder =
             new ArchSystemsWorldBuilder<TestWorld>(new TestWorld(),
-                _loopHelper = Substitute.For<IUnityPlayerLoopHelper>());
+                _playerLoop = Substitute.For<IPlayerLoop>());
 
         _customSystem1 = CustomSystem1.InjectToWorld(ref _worldBuilder);
         _customSystemWithParameters1 = CustomSystemWithParameters1.InjectToWorld(ref _worldBuilder, "test", 1);
@@ -102,18 +102,6 @@ public class TestSetup1Tests
         AssertIsEmpty<PresentationSystemGroup>();
         AssertIsEmpty<PostRenderingSystemGroup>();
         AssertIsEmpty<SimulationSystemGroup>();
-    }
-
-    [Test]
-    public void InvokesPlayerLoopHelper()
-    {
-        _worldBuilder.Finish();
-
-        _loopHelper.Received(1)
-            ?.AppendWorldToCurrentPlayerLoop(
-                Arg.Any<InitializationSystemGroup>(), Arg.Any<SimulationSystemGroup>(),
-                Arg.Any<PresentationSystemGroup>(),
-                Arg.Any<PostRenderingSystemGroup>(), Arg.Any<PhysicsSystemGroup>(), Arg.Any<PostPhysicsSystemGroup>());
     }
 
     [Test]

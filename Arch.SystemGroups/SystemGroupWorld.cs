@@ -8,13 +8,18 @@ namespace Arch.SystemGroups;
 /// </summary>
 public class SystemGroupWorld : IDisposable
 {
-    private readonly IUnityPlayerLoopHelper _unityPlayerLoopHelper;
+    private readonly IPlayerLoop _playerLoop;
     
+    // Aggregate factory is used to create the aggregate for each system group type,
+    // acts as a key in the SystemGroupAggregateCache
+    private readonly ISystemGroupAggregateFactory _aggregateFactory;
+
     internal IReadOnlyList<SystemGroup> SystemGroups { get; }
     
-    internal SystemGroupWorld(IReadOnlyList<SystemGroup> systemGroups, IUnityPlayerLoopHelper unityPlayerLoopHelper)
+    internal SystemGroupWorld(IReadOnlyList<SystemGroup> systemGroups, IPlayerLoop playerLoop, ISystemGroupAggregateFactory aggregateFactory)
     {
-        _unityPlayerLoopHelper = unityPlayerLoopHelper;
+        _playerLoop = playerLoop;
+        _aggregateFactory = aggregateFactory;
         SystemGroups = systemGroups;
     }
 
@@ -38,7 +43,7 @@ public class SystemGroupWorld : IDisposable
         for (var i = 0; i < SystemGroups.Count; i++)
         {
             SystemGroups[i].Dispose();
-            _unityPlayerLoopHelper.RemoveFromCurrentPlayerLoop(SystemGroups[i]);
+            _playerLoop.RemoveFromPlayerLoop(_aggregateFactory, SystemGroups[i]);
         }
     }
 }

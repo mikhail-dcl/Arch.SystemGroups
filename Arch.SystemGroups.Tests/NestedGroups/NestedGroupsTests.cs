@@ -7,7 +7,7 @@ namespace Arch.SystemGroups.Tests.NestedGroups;
 public class NestedGroupsTests
 {
     private ArchSystemsWorldBuilder<TestWorld> _worldBuilder;
-    private IUnityPlayerLoopHelper? _loopHelper;
+    private IPlayerLoop? _loopHelper;
 
     private SystemInNestedGroup _system;
     
@@ -16,7 +16,7 @@ public class NestedGroupsTests
     {
         _worldBuilder =
             new ArchSystemsWorldBuilder<TestWorld>(new TestWorld(),
-                _loopHelper = Substitute.For<IUnityPlayerLoopHelper>());
+                _loopHelper = Substitute.For<IPlayerLoop>());
         
         _system = SystemInNestedGroup.InjectToWorld(ref _worldBuilder);
     }

@@ -6,7 +6,7 @@ namespace Arch.SystemGroups.Tests.ThrottleGroup;
 
 public class ThrottleGroupTests
 {
-    private IUnityPlayerLoopHelper? _loopHelper;
+    private IPlayerLoop _playerLoop;
     private ThrottlePostRenderingSystem _postRenderingSystem;
     private ThrottleSimulationSystem _simulationSystem;
 
@@ -17,10 +17,16 @@ public class ThrottleGroupTests
     {
         _worldBuilder =
             new ArchSystemsWorldBuilder<TestWorld>(new TestWorld(),
-                _loopHelper = Substitute.For<IUnityPlayerLoopHelper>());
+                _playerLoop = Substitute.For<IPlayerLoop>());
 
         _simulationSystem = ThrottleSimulationSystem.InjectToWorld(ref _worldBuilder);
         _postRenderingSystem = ThrottlePostRenderingSystem.InjectToWorld(ref _worldBuilder);
+    }
+
+    [TearDown]
+    public void TearDown()
+    {
+        PlayerLoopHelper.AggregatesCache.Clear();
     }
 
     [Test]
@@ -36,20 +42,13 @@ public class ThrottleGroupTests
     public void Throttles()
     {
         // Can't test it because Time.deltaTime can't be used outside of Unity: System.Security.SecurityException : ECall methods must be packaged into a system module.
-        var systemGroups = new List<SystemGroup>();
-
-        _loopHelper.When(l => l.AppendWorldToCurrentPlayerLoop(
-                Arg.Any<InitializationSystemGroup>(),
-                Arg.Any<SimulationSystemGroup>(),
-                Arg.Any<PresentationSystemGroup>(),
-                Arg.Any<PostRenderingSystemGroup>(),
-                Arg.Any<PhysicsSystemGroup>(),
-                Arg.Any<PostPhysicsSystemGroup>()))
-            .Do(c =>
-            {
-                systemGroups.Add(c.ArgAt<SimulationSystemGroup>(1));
-                systemGroups.Add(c.ArgAt<PostRenderingSystemGroup>(3));
-            });
+        var systemGroups = new List<ISystemGroupAggregate>();
+        
+        _playerLoop.When(p => p.AddAggregate(typeof(SimulationSystemGroup), Arg.Any<ISystemGroupAggregate<SystemGroupAggregate.None>>()))
+            .Do(c => systemGroups.Add(c.Arg<ISystemGroupAggregate<SystemGroupAggregate.None>>()));
+        
+        _playerLoop.When(p => p.AddAggregate(typeof(PostRenderingSystemGroup), Arg.Any<ISystemGroupAggregate<SystemGroupAggregate.None>>()))
+            .Do(c => systemGroups.Add(c.Arg<ISystemGroupAggregate<SystemGroupAggregate.None>>()));
         
         var world = _worldBuilder.Finish();
         world.Initialize();
@@ -58,7 +57,7 @@ public class ThrottleGroupTests
         {
             foreach (var systemGroup in systemGroups)
             {
-                systemGroup.Update();
+                systemGroup.TriggerUpdate();
             }
         }
         
@@ -86,19 +85,10 @@ public class ThrottleGroupTests
 
         var system = ParametrisedThrottleSystem.InjectToWorld(ref _worldBuilder);
         
-        var systemGroups = new List<SystemGroup>();
+        var systemGroups = new List<ISystemGroupAggregate>();
 
-        _loopHelper.When(l => l.AppendWorldToCurrentPlayerLoop(
-                Arg.Any<InitializationSystemGroup>(),
-                Arg.Any<SimulationSystemGroup>(),
-                Arg.Any<PresentationSystemGroup>(),
-                Arg.Any<PostRenderingSystemGroup>(),
-                Arg.Any<PhysicsSystemGroup>(),
-                Arg.Any<PostPhysicsSystemGroup>()))
-            .Do(c =>
-            {
-                systemGroups.Add(c.ArgAt<SimulationSystemGroup>(1));
-            });
+        _playerLoop.When(p => p.AddAggregate(typeof(SimulationSystemGroup), Arg.Any<ISystemGroupAggregate<SystemGroupAggregate.None>>()))
+            .Do(c => systemGroups.Add(c.Arg<ISystemGroupAggregate<SystemGroupAggregate.None>>()));
         
         var world = _worldBuilder.Finish();
         world.Initialize();
@@ -107,7 +97,7 @@ public class ThrottleGroupTests
         {
             foreach (var systemGroup in systemGroups)
             {
-                systemGroup.Update();
+                systemGroup.TriggerUpdate();
             }
         }
         

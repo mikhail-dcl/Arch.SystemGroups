@@ -10,7 +10,7 @@ public class ExceptionsHandlingTests
 
     private ISystemGroupExceptionHandler _exceptionHandler;
     private ArchSystemsWorldBuilder<TestWorld> _worldBuilder;
-    private IUnityPlayerLoopHelper _loopHelper;
+    private IPlayerLoop _loop;
     private SystemGroupWorld _world;
     private SystemGroup _systemGroup;
 
@@ -21,7 +21,7 @@ public class ExceptionsHandlingTests
         
         _worldBuilder =
             new ArchSystemsWorldBuilder<TestWorld>(new TestWorld(),
-                _loopHelper = Substitute.For<IUnityPlayerLoopHelper>(), exceptionHandler: _exceptionHandler);
+                _loop = Substitute.For<IPlayerLoop>(), exceptionHandler: _exceptionHandler);
         
         _throwingSystem1 = ThrowingSystem1.InjectToWorld(ref _worldBuilder);
         _world = _worldBuilder.Finish();

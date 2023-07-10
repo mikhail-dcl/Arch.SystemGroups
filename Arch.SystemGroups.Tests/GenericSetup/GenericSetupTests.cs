@@ -38,7 +38,7 @@ public class GenericSetupTests
     }
     
     private ArchSystemsWorldBuilder<TestWorld> _worldBuilder;
-    private IUnityPlayerLoopHelper? _loopHelper;
+    private IPlayerLoop? _loopHelper;
 
     private GenericSystem0<double> _genericSystem0;
 
@@ -54,7 +54,7 @@ public class GenericSetupTests
     [SetUp]
     public void SetUp()
     {
-        _worldBuilder = new ArchSystemsWorldBuilder<TestWorld>(new TestWorld(), _loopHelper = Substitute.For<IUnityPlayerLoopHelper>());
+        _worldBuilder = new ArchSystemsWorldBuilder<TestWorld>(new TestWorld(), _loopHelper = Substitute.For<IPlayerLoop>());
 
         _genericSystem0 = GenericSystem0<double>.InjectToWorld(ref _worldBuilder, 0.5d);
 

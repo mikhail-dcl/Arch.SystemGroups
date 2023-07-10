@@ -22,7 +22,7 @@ public readonly struct ArchSystemsWorldBuilder<T>
     private readonly Dictionary<Type, GroupInfo> _groupsInfo;
     private readonly Dictionary<Type, CustomGroupBase<float>> _customGroups;
 
-    private readonly IUnityPlayerLoopHelper _unityPlayerLoopHelper;
+    private readonly IPlayerLoop _playerLoop;
 
     private readonly IFixedUpdateBasedSystemGroupThrottler _fixedUpdateBasedSystemGroupThrottler;
     private readonly IUpdateBasedSystemGroupThrottler _updateBasedSystemGroupThrottler;
@@ -38,17 +38,17 @@ public readonly struct ArchSystemsWorldBuilder<T>
     public ArchSystemsWorldBuilder(T world, IFixedUpdateBasedSystemGroupThrottler fixedUpdateBasedSystemGroupThrottler = null,
         IUpdateBasedSystemGroupThrottler updateBasedSystemGroupThrottler = null,
         ISystemGroupExceptionHandler exceptionHandler = null) : this(world,
-        UnityPlayerLoopHelper.Wrapper.Instance, fixedUpdateBasedSystemGroupThrottler, updateBasedSystemGroupThrottler, exceptionHandler)
+        UnityPlayerLoop.Instance, fixedUpdateBasedSystemGroupThrottler, updateBasedSystemGroupThrottler, exceptionHandler)
     {
     }
 
-    internal ArchSystemsWorldBuilder(T world, IUnityPlayerLoopHelper unityPlayerLoopHelper,
+    internal ArchSystemsWorldBuilder(T world, IPlayerLoop playerLoop,
         IFixedUpdateBasedSystemGroupThrottler fixedUpdateBasedSystemGroupThrottler = null,
         IUpdateBasedSystemGroupThrottler updateBasedSystemGroupThrottler = null,
         ISystemGroupExceptionHandler exceptionHandler = null)
     {
         World = world;
-        _unityPlayerLoopHelper = unityPlayerLoopHelper;
+        _playerLoop = playerLoop;
         _fixedUpdateBasedSystemGroupThrottler = fixedUpdateBasedSystemGroupThrottler;
         _updateBasedSystemGroupThrottler = updateBasedSystemGroupThrottler;
         _exceptionHandler = exceptionHandler;
@@ -130,11 +130,23 @@ public readonly struct ArchSystemsWorldBuilder<T>
         _customGroups.Add(typeof(TGroup), customGroup);
     }
 
+    
     /// <summary>
-    ///     Finalize the builder and create a systems world
+    /// Finalize the builder and create a systems world
     /// </summary>
-    /// <returns></returns>
     public SystemGroupWorld Finish()
+    {
+        return Finish(SystemGroupAggregate.Factory.Instance, default);
+    }
+
+    /// <summary>
+    ///     Finalize the builder and create a systems world according to the custom aggregation mechanism
+    /// </summary>
+    /// <param name="aggregateFactory">factory for custom aggregation</param>
+    /// <param name="aggregationData">data for custom aggregation</param>
+    /// <typeparam name="TAggregationData">Type of aggregation data</typeparam>
+    /// <exception cref="GroupNotFoundException"></exception>
+    public SystemGroupWorld Finish<TAggregationData>(ISystemGroupAggregate<TAggregationData>.IFactory aggregateFactory, TAggregationData aggregationData)
     {
         var initializationSystemGroup = InitializationSystemGroup.Empty;
         var simulationSystemGroup = SimulationSystemGroup.Empty;
@@ -167,7 +179,9 @@ public readonly struct ArchSystemsWorldBuilder<T>
         DictionaryPool<Type, GroupInfo>.Release(_groupsInfo);
         DictionaryPool<Type, CustomGroupBase<float>>.Release(_customGroups);
 
-        _unityPlayerLoopHelper.AppendWorldToCurrentPlayerLoop(
+        _playerLoop.AppendWorldToCurrentPlayerLoop(
+            aggregateFactory,
+            aggregationData,
             initializationSystemGroup,
             simulationSystemGroup,
             presentationSystemGroup,
@@ -184,7 +198,7 @@ public readonly struct ArchSystemsWorldBuilder<T>
             postRenderingSystemGroup,
             physicsSystemGroup,
             postPhysicsSystemGroup
-        }, _unityPlayerLoopHelper);
+        }, _playerLoop, aggregateFactory);
     }
 
     private PostPhysicsSystemGroup CreatePostPhysicsSystemGroup(List<ExecutionNode<float>> list)

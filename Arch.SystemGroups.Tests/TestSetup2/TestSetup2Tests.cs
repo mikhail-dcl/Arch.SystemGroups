@@ -8,12 +8,12 @@ namespace Arch.SystemGroups.Tests.TestSetup2;
 public class TestSetup2Tests
 {
     private ArchSystemsWorldBuilder<TestWorld2> _worldBuilder;
-    private IUnityPlayerLoopHelper? _loopHelper;
+    private IPlayerLoop? _loopHelper;
     
     [SetUp]
     public void Setup()
     {
-        _worldBuilder = new ArchSystemsWorldBuilder<TestWorld2>(new TestWorld2(), _loopHelper = Substitute.For<IUnityPlayerLoopHelper>());
+        _worldBuilder = new ArchSystemsWorldBuilder<TestWorld2>(new TestWorld2(), _loopHelper = Substitute.For<IPlayerLoop>());
         
         /*_worldBuilder
             .AddSystemCGroupAA()
@@ -37,17 +37,6 @@ public class TestSetup2Tests
             */
 
         _worldBuilder.AddAllSystems();
-    }
-    
-    [Test]
-    public void InvokesPlayerLoopHelper()
-    {
-        _worldBuilder.Finish();
-
-        _loopHelper.Received(1)
-            ?.AppendWorldToCurrentPlayerLoop(
-                Arg.Any<InitializationSystemGroup>(), Arg.Any<SimulationSystemGroup>(), Arg.Any<PresentationSystemGroup>(),
-                Arg.Any<PostRenderingSystemGroup>(), Arg.Any<PhysicsSystemGroup>(), Arg.Any<PostPhysicsSystemGroup>());
     }
 
     [Test]

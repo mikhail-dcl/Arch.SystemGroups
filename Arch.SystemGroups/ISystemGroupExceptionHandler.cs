@@ -7,6 +7,9 @@ namespace Arch.SystemGroups;
 /// </summary>
 public interface ISystemGroupExceptionHandler
 {
+    /// <summary>
+    ///    Action to tell the System Group how to behave after the exception
+    /// </summary>
     public enum Action : byte
     {
         /// <summary>
