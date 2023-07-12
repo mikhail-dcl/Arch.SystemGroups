@@ -11,6 +11,17 @@ public static class PlayerLoopHelper
     internal static readonly Dictionary<ISystemGroupAggregateFactory, SystemGroupAggregateCache> AggregatesCache = new (10);
 
     /// <summary>
+    /// Retrieve all aggregates created from the given factory
+    /// </summary>
+    /// <returns></returns>
+    public static void GetAggregates<TAggregate, TData>(ISystemGroupAggregateFactory factory, List<TAggregate> results) where TAggregate : ISystemGroupAggregate<TData>
+    {
+        results.Clear();
+        if (AggregatesCache.TryGetValue(factory, out var cache))
+            cache.GetAllAggregates<TAggregate, TData>(results);
+    }
+
+    /// <summary>
     /// Append ECS world to the provided player loop, supports custom system group aggregates
     /// </summary>
     public static void AppendWorldToCurrentPlayerLoop<T>(

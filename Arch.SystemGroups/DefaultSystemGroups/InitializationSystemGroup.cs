@@ -16,7 +16,7 @@ public class InitializationSystemGroup : SystemGroup
     
     internal static readonly InitializationSystemGroup Empty = new (null, null, null);
 
-    internal override void Update()
+    public override void Update()
     {
         Update(TimeProvider.GetInfo());
     }

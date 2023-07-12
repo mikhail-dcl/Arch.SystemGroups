@@ -11,6 +11,12 @@ internal class SystemGroupAggregateCache
 {
     private readonly Dictionary<Type, ISystemGroupAggregate> _aggregates = new (SystemGroupsUtils.Count);
 
+    internal void GetAllAggregates<TAggregate, TData>(List<TAggregate> results) where TAggregate : ISystemGroupAggregate<TData>
+    {
+        foreach (var aggregate in _aggregates.Values)
+            results.Add((TAggregate) aggregate);
+    }
+
     public int Count => _aggregates.Count;
 
     public ISystemGroupAggregate<T> Add<T>(Type systemGroupType, ISystemGroupAggregate<T>.IFactory factory)

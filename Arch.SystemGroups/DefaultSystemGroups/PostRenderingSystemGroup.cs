@@ -19,7 +19,7 @@ public class PostRenderingSystemGroup : SystemGroup
     
     internal static readonly PostRenderingSystemGroup Empty = new (null, null, null);
 
-    internal override void Update()
+    public override void Update()
     {
         Update(TimeProvider.GetInfo());
     }

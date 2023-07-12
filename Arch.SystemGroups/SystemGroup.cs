@@ -80,7 +80,10 @@ public abstract class SystemGroup : IDisposable
         CurrentState = State.Disposed;
     }
 
-    internal abstract void Update();
+    /// <summary>
+    ///     Update all nodes in the group
+    /// </summary>
+    public abstract void Update();
 
     private protected void Update(in TimeProvider.Info timeInfo)
     {

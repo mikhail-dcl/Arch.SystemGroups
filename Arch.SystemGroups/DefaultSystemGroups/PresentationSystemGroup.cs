@@ -18,7 +18,7 @@ public class PresentationSystemGroup : SystemGroup
     
     internal static readonly PresentationSystemGroup Empty = new (null, null, null);
 
-    internal override void Update()
+    public override void Update()
     {
         Update(TimeProvider.GetInfo());
     }

@@ -18,7 +18,7 @@ public class PhysicsSystemGroup : SystemGroup
     
     internal static readonly PhysicsSystemGroup Empty = new (null, null, null);
 
-    internal override void Update()
+    public override void Update()
     {
         Update(TimeProvider.GetFixedInfo());
     }
