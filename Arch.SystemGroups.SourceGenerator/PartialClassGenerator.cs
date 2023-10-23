@@ -198,11 +198,15 @@ public static class PartialClassGenerator
     
     private static string GetSystemPartialClass(in SystemInfo systemInfo, WorldInfo worldInfo)
     {
-        var typeGenericArguments = CommonUtils.GetGenericArguments(systemInfo.This);
+        var typeGenericArguments = CommonUtils.GetGenericArguments(systemInfo.This, false);
         var typeGenericArgumentsWhere = CommonUtils.GetGenericConstraintsString(systemInfo.This);
         var addEdgesFieldDeclaration = EdgesGenerator.GetAddEdgesCachedField();
         var addEdgesBody = EdgesGenerator.GetAddEdgesBody(systemInfo.UpdateBefore, systemInfo.UpdateAfter, systemInfo.ClassName, systemInfo.This, typeGenericArguments);
 
+        var validateEdgesFieldDeclaration = EdgesGenerator.GetValidateEdgesCachedField();
+        var validateEdgesBody = EdgesGenerator.GetValidateEdgesBody(systemInfo.UpdateBefore, systemInfo.UpdateAfter,
+            systemInfo.UpdateInGroup, systemInfo.ClassName, systemInfo.This, typeGenericArguments);
+        
         var injectToWorldMethodParams = InjectToWorldGenerator.GetMethodArgumentsWithoutWorld(in systemInfo).ToString();
         var passArguments = InjectToWorldGenerator.GetPassArguments(in systemInfo).ToString();
         var systemInstantiation = InjectToWorldGenerator.GetSystemInstantiation(in systemInfo, typeGenericArguments);
@@ -241,6 +245,8 @@ public static class PartialClassGenerator
                 {{systemInfo.AccessModifier}} partial class {{systemInfo.ClassName}}{{typeGenericArguments}}{
                     
                 {{addEdgesFieldDeclaration}}
+                
+                {{validateEdgesFieldDeclaration}}
 
                 public static {{systemInfo.ClassName}}{{typeGenericArguments}} InjectToWorld(ref ArchSystemsWorldBuilder<{{worldType}}> worldBuilder{{injectToWorldMethodParams}})
                 {
@@ -253,6 +259,11 @@ public static class PartialClassGenerator
                 private static void AddEdges(Dictionary<Type, List<Type>> edgesMap)
                 {
                     {{addEdgesBody}}
+                }
+                
+                private static void {{EdgesGenerator.ValidateEdgesMethodName}}(List<DisconnectedDependenciesInfo.WrongTypeBinding> {{EdgesGenerator.DisconnectedDependenciesFieldName}})
+                {
+                    {{validateEdgesBody}}
                 }
 
                 {{metadata}}
@@ -271,6 +282,10 @@ public static class PartialClassGenerator
         var addEdgesFieldDeclaration = EdgesGenerator.GetAddEdgesCachedField();
         var addEdgesBody = EdgesGenerator.GetAddEdgesBody(groupInfo.UpdateBefore, groupInfo.UpdateAfter, groupInfo.ClassName, groupInfo.This, string.Empty);
 
+        var validateEdgesFieldDeclaration = EdgesGenerator.GetValidateEdgesCachedField();
+        var validateEdgesBody = EdgesGenerator.GetValidateEdgesBody(groupInfo.UpdateBefore, groupInfo.UpdateAfter,
+            groupInfo.UpdateInGroup, groupInfo.ClassName, groupInfo.This, string.Empty);
+        
         // If there is no system directly attached to the group we need to create the tree of groups, otherwise the leaf system will be detached
         var groupInjection = InjectToWorldGenerator.GetGroupInjectionInvocation(groupInfo.UpdateInGroup);
         var createGroup = CreateGroupGenerator.GetTryGetCreateGroup(in groupInfo);
@@ -290,6 +305,8 @@ public static class PartialClassGenerator
                 {{groupInfo.AccessModifier}} partial class {{groupInfo.ClassName}}{{(customBehaviour ? string.Empty : ": DefaultGroup<float>")}} {
                     
                 {{addEdgesFieldDeclaration}}
+                
+                {{validateEdgesFieldDeclaration}}
 
                 public static void TryCreateGroup<T>(ref ArchSystemsWorldBuilder<T> worldBuilder)
                 {
@@ -300,6 +317,11 @@ public static class PartialClassGenerator
                 private static void AddEdges(Dictionary<Type, List<Type>> edgesMap)
                 {
                     {{addEdgesBody}}
+                }
+                
+                private static void {{EdgesGenerator.ValidateEdgesMethodName}}(List<DisconnectedDependenciesInfo.WrongTypeBinding> {{EdgesGenerator.DisconnectedDependenciesFieldName}})
+                {
+                    {{validateEdgesBody}}
                 }
 
                 {{metadata}}

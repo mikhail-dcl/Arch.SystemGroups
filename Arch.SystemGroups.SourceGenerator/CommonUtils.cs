@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
@@ -63,6 +64,17 @@ public static class CommonUtils
 
         if (IsGenericArgument(typeSymbol))
             return typeSymbol.ToString();
+        
+        // Append each generic argument within typeSymbol with "global::" prefix
+        if (typeSymbol is INamedTypeSymbol { IsGenericType: true, TypeArguments.Length: > 0 } namedTypeSymbol)
+        {
+            var genericArguments = GetGenericArguments(typeSymbol, true);
+            
+            var originalDefinitionName = namedTypeSymbol.OriginalDefinition.ToString(); // Ends with '<TName,...TNameN>'
+            var genericStartIndex = originalDefinitionName.IndexOf('<');
+            
+            return "global::" + originalDefinitionName.Remove(genericStartIndex) + genericArguments;
+        }
 
         return "global::" + typeSymbol;
     }
@@ -87,7 +99,7 @@ public static class CommonUtils
     public static bool IsGenericType(this ITypeSymbol typeSymbol) => 
         typeSymbol is INamedTypeSymbol { IsGenericType: true, TypeArguments.Length: > 0 };
 
-    public static string GetGenericArguments(ITypeSymbol typeSymbol)
+    public static string GetGenericArguments(ITypeSymbol typeSymbol, bool globalNotation)
     {
         if (!(typeSymbol is INamedTypeSymbol { IsGenericType: true } namedTypeSymbol) || namedTypeSymbol.TypeArguments.Length == 0)
             return string.Empty;
@@ -97,7 +109,7 @@ public static class CommonUtils
         for (int i = 0; i < namedTypeSymbol.TypeArguments.Length; i++)
         {
             ITypeSymbol typeArgument = namedTypeSymbol.TypeArguments[i];
-            genericArgumentsBuilder.Append(typeArgument.Name);
+            genericArgumentsBuilder.Append(globalNotation ? GetTypeReferenceInGlobalNotation(typeArgument) : typeArgument.Name);
 
             if (i < namedTypeSymbol.TypeArguments.Length - 1)
             {

@@ -49,10 +49,10 @@ public partial class SystemDGroupBA : BaseSystem<TestWorld2, float>
 [UpdateInGroup(typeof(GroupBB))]
 [UpdateBefore(typeof(SystemBGroupBB))]
 // The following edges will be ignored as belong to a different group
-[UpdateAfter(typeof(SystemCGroupBA))]
-[UpdateAfter(typeof(SystemBGroupBA))]
-[UpdateAfter(typeof(SystemAGroupBA))]
-[UpdateAfter(typeof(SystemDGroupBA))]
+// [UpdateAfter(typeof(SystemCGroupBA))] no tolerance
+// [UpdateAfter(typeof(SystemBGroupBA))]
+// [UpdateAfter(typeof(SystemAGroupBA))]
+// [UpdateAfter(typeof(SystemDGroupBA))]
 public partial class SystemAGroupBB : BaseSystem<TestWorld2, float>
 {
     public SystemAGroupBB(TestWorld2 world) : base(world)

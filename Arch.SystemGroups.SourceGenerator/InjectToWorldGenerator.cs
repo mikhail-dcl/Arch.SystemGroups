@@ -57,6 +57,8 @@ namespace Arch.SystemGroups.SourceGenerator
             sb.Append($"typeof({systemInfo.ClassName}{typeGenericArguments}), ");
             sb.Append(EdgesGenerator.AddEdgesCachedFieldName);
             sb.Append(", ");
+            sb.Append(EdgesGenerator.ValidateEdgesCachedFieldName);
+            sb.Append(", ");
             sb.Append(systemInfo.ThrottlingEnabled.ToString().ToLower());
             sb.Append(");");
             

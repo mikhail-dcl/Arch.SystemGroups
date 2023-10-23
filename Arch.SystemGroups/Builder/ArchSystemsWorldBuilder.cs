@@ -17,6 +17,7 @@ public readonly struct ArchSystemsWorldBuilder<T>
     {
         public Dictionary<Type, ExecutionNode<float>> Systems;
         public Dictionary<Type, List<Type>> Edges;
+        public List<DisconnectedDependenciesInfo.WrongTypeBinding> DisconnectedDependencies;
     }
 
     private readonly Dictionary<Type, GroupInfo> _groupsInfo;
@@ -35,10 +36,12 @@ public readonly struct ArchSystemsWorldBuilder<T>
     /// <param name="fixedUpdateBasedSystemGroupThrottler">Throttler for all Fixed Update based Systems</param>
     /// <param name="updateBasedSystemGroupThrottler">Throttler for all Update based Systems</param>
     /// <param name="exceptionHandler">Exception handler</param>
-    public ArchSystemsWorldBuilder(T world, IFixedUpdateBasedSystemGroupThrottler fixedUpdateBasedSystemGroupThrottler = null,
+    public ArchSystemsWorldBuilder(T world,
+        IFixedUpdateBasedSystemGroupThrottler fixedUpdateBasedSystemGroupThrottler = null,
         IUpdateBasedSystemGroupThrottler updateBasedSystemGroupThrottler = null,
         ISystemGroupExceptionHandler exceptionHandler = null) : this(world,
-        UnityPlayerLoop.Instance, fixedUpdateBasedSystemGroupThrottler, updateBasedSystemGroupThrottler, exceptionHandler)
+        UnityPlayerLoop.Instance, fixedUpdateBasedSystemGroupThrottler, updateBasedSystemGroupThrottler,
+        exceptionHandler)
     {
     }
 
@@ -66,7 +69,10 @@ public readonly struct ArchSystemsWorldBuilder<T>
     ///     Creates Groups Automatically
     /// </summary>
     public ArchSystemsWorldBuilder<T> TryCreateGroup<TGroup>(Type updateInGroupType,
-        Action<Dictionary<Type, List<Type>>> addToEdges, bool throttlingEnabled) where TGroup : CustomGroupBase<float>, new()
+        Action<Dictionary<Type, List<Type>>> addToEdges, 
+        Action<List<DisconnectedDependenciesInfo.WrongTypeBinding>> validateDependencies, 
+        bool throttlingEnabled)
+        where TGroup : CustomGroupBase<float>, new()
     {
         if (_customGroups.ContainsKey(typeof(TGroup)))
             return this;
@@ -75,40 +81,49 @@ public readonly struct ArchSystemsWorldBuilder<T>
 
         _customGroups[typeof(TGroup)] = newGroup;
 
-        return AddToGroup(new ExecutionNode<float>(newGroup, throttlingEnabled), updateInGroupType, typeof(TGroup), addToEdges);
+        return AddToGroup(new ExecutionNode<float>(newGroup, throttlingEnabled), updateInGroupType, typeof(TGroup),
+            addToEdges, validateDependencies);
     }
 
     /// <summary>
     ///     Registers a group that is not created automatically
     /// </summary>
-    public void TryRegisterGroup<TGroup>(Type updateInGroupType, Action<Dictionary<Type, List<Type>>> addToEdges, bool throttlingEnabled)
+    public void TryRegisterGroup<TGroup>(Type updateInGroupType, Action<Dictionary<Type, List<Type>>> addToEdges,
+        Action<List<DisconnectedDependenciesInfo.WrongTypeBinding>> validateDependencies,
+        bool throttlingEnabled)
         where TGroup : CustomGroupBase<float>
     {
         // Thr group should be injected in advance
         if (!_customGroups.TryGetValue(typeof(TGroup), out var customGroup))
             throw new GroupNotFoundException(typeof(TGroup));
 
-        AddToGroup(new ExecutionNode<float>(customGroup, throttlingEnabled), updateInGroupType, typeof(TGroup), addToEdges, false);
+        AddToGroup(new ExecutionNode<float>(customGroup, throttlingEnabled), updateInGroupType, typeof(TGroup),
+            addToEdges, validateDependencies, false);
     }
 
     /// <summary>
     ///     Used by auto-generated code
     /// </summary>
     public ArchSystemsWorldBuilder<T> AddToGroup(ISystem<float> system, Type updateInGroupType, Type systemType,
-        Action<Dictionary<Type, List<Type>>> addToEdges, bool throttlingEnabled, bool assertGroupExists = true)
+        Action<Dictionary<Type, List<Type>>> addToEdges, Action<List<DisconnectedDependenciesInfo.WrongTypeBinding>> validateDependencies,
+        bool throttlingEnabled, bool assertGroupExists = true)
     {
-        return AddToGroup(new ExecutionNode<float>(system, throttlingEnabled), updateInGroupType, systemType, addToEdges,
+        return AddToGroup(new ExecutionNode<float>(system, throttlingEnabled), updateInGroupType, systemType,
+            addToEdges,
+            validateDependencies,
             assertGroupExists);
     }
 
     private ArchSystemsWorldBuilder<T> AddToGroup(ExecutionNode<float> node, Type updateInGroupType, Type systemType,
-        Action<Dictionary<Type, List<Type>>> addToEdges, bool assertGroupExists = true)
+        Action<Dictionary<Type, List<Type>>> addToEdges, Action<List<DisconnectedDependenciesInfo.WrongTypeBinding>> validateDependencies,
+        bool assertGroupExists = true)
     {
         if (!_groupsInfo.TryGetValue(updateInGroupType, out var group))
             _groupsInfo[updateInGroupType] = group = new GroupInfo
             {
                 Systems = DictionaryPool<Type, ExecutionNode<float>>.Get(),
-                Edges = DictionaryPool<Type, List<Type>>.Get()
+                Edges = DictionaryPool<Type, List<Type>>.Get(),
+                DisconnectedDependencies = ListPool<DisconnectedDependenciesInfo.WrongTypeBinding>.Get()
             };
 
         if (group.Systems.ContainsKey(systemType))
@@ -121,6 +136,7 @@ public readonly struct ArchSystemsWorldBuilder<T>
 
         group.Systems[systemType] = node;
         addToEdges(group.Edges);
+        validateDependencies(group.DisconnectedDependencies);
 
         return this;
     }
@@ -130,9 +146,9 @@ public readonly struct ArchSystemsWorldBuilder<T>
         _customGroups.Add(typeof(TGroup), customGroup);
     }
 
-    
+
     /// <summary>
-    /// Finalize the builder and create a systems world
+    ///     Finalize the builder and create a systems world
     /// </summary>
     public SystemGroupWorld Finish()
     {
@@ -146,7 +162,8 @@ public readonly struct ArchSystemsWorldBuilder<T>
     /// <param name="aggregationData">data for custom aggregation</param>
     /// <typeparam name="TAggregationData">Type of aggregation data</typeparam>
     /// <exception cref="GroupNotFoundException"></exception>
-    public SystemGroupWorld Finish<TAggregationData>(ISystemGroupAggregate<TAggregationData>.IFactory aggregateFactory, TAggregationData aggregationData)
+    public SystemGroupWorld Finish<TAggregationData>(ISystemGroupAggregate<TAggregationData>.IFactory aggregateFactory,
+        TAggregationData aggregationData)
     {
         var initializationSystemGroup = InitializationSystemGroup.Empty;
         var simulationSystemGroup = SimulationSystemGroup.Empty;
@@ -155,14 +172,15 @@ public readonly struct ArchSystemsWorldBuilder<T>
         var physicsSystemGroup = PhysicsSystemGroup.Empty;
         var postPhysicsSystemGroup = PostPhysicsSystemGroup.Empty;
 
-        // how to detect detached systems?
+        // detect detached dependencies
+        var disconnectedDependencies = ListPool<DisconnectedDependenciesInfo>.Get();
 
-        CreateSystemGroup(ref initializationSystemGroup, CreateInitializationSystemGroup);
-        CreateSystemGroup(ref simulationSystemGroup, CreateSimulationSystemGroup);
-        CreateSystemGroup(ref presentationSystemGroup, CreatePresentationSystemGroup);
-        CreateSystemGroup(ref postRenderingSystemGroup, CreatePostRenderingSystemGroup);
-        CreateSystemGroup(ref physicsSystemGroup, CreatePhysicsSystemGroup);
-        CreateSystemGroup(ref postPhysicsSystemGroup, CreatePostPhysicsSystemGroup);
+        CreateSystemGroup(ref initializationSystemGroup, CreateInitializationSystemGroup, disconnectedDependencies);
+        CreateSystemGroup(ref simulationSystemGroup, CreateSimulationSystemGroup, disconnectedDependencies);
+        CreateSystemGroup(ref presentationSystemGroup, CreatePresentationSystemGroup, disconnectedDependencies);
+        CreateSystemGroup(ref postRenderingSystemGroup, CreatePostRenderingSystemGroup, disconnectedDependencies);
+        CreateSystemGroup(ref physicsSystemGroup, CreatePhysicsSystemGroup, disconnectedDependencies);
+        CreateSystemGroup(ref postPhysicsSystemGroup, CreatePostPhysicsSystemGroup, disconnectedDependencies);
 
         // All remaining groups are empty at the moment
         // Fill them with systems
@@ -171,11 +189,20 @@ public readonly struct ArchSystemsWorldBuilder<T>
         {
             if (!_customGroups.TryGetValue(systemType, out var customGroup))
                 throw new GroupNotFoundException(systemType);
+            
+            // validate dependencies
+            if (groupInfo.DisconnectedDependencies.Count > 0)
+                disconnectedDependencies.Add(new DisconnectedDependenciesInfo(systemType, new List<DisconnectedDependenciesInfo.WrongTypeBinding>(groupInfo.DisconnectedDependencies)));
 
             customGroup.SetSystems(ArchSystemsSorter.SortSystems(groupInfo.Systems, groupInfo.Edges));
             CleanUpGroupInfo(in groupInfo);
         }
 
+        // At this point we gather all information about wrong dependencies
+        if (disconnectedDependencies.Count > 0)
+            throw new DisconnectedDependenciesFoundException(disconnectedDependencies);
+
+        ListPool<DisconnectedDependenciesInfo>.Release(disconnectedDependencies);
         DictionaryPool<Type, GroupInfo>.Release(_groupsInfo);
         DictionaryPool<Type, CustomGroupBase<float>>.Release(_customGroups);
 
@@ -231,11 +258,16 @@ public readonly struct ArchSystemsWorldBuilder<T>
         return new InitializationSystemGroup(list, _updateBasedSystemGroupThrottler, _exceptionHandler);
     }
 
-    private void CreateSystemGroup<TGroup>(ref TGroup group, Func<List<ExecutionNode<float>>, TGroup> constructor)
+    private void CreateSystemGroup<TGroup>(ref TGroup group, Func<List<ExecutionNode<float>>, TGroup> constructor,
+        List<DisconnectedDependenciesInfo> disconnectedDependencies)
         where TGroup : SystemGroup
     {
         if (_groupsInfo.TryGetValue(typeof(TGroup), out var groupsInfo))
         {
+            // validate dependencies
+            if (groupsInfo.DisconnectedDependencies.Count > 0)
+                disconnectedDependencies.Add(new DisconnectedDependenciesInfo(typeof(TGroup), new List<DisconnectedDependenciesInfo.WrongTypeBinding>(groupsInfo.DisconnectedDependencies)));
+            
             group = constructor(ArchSystemsSorter.SortSystems(groupsInfo.Systems, groupsInfo.Edges));
 
             CleanUpGroupInfo(in groupsInfo);
@@ -251,5 +283,6 @@ public readonly struct ArchSystemsWorldBuilder<T>
             ListPool<Type>.Release(edges);
 
         DictionaryPool<Type, List<Type>>.Release(groupInfo.Edges);
+        ListPool<DisconnectedDependenciesInfo.WrongTypeBinding>.Release(groupInfo.DisconnectedDependencies);
     }
 }

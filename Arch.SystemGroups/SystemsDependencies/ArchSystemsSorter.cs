@@ -24,6 +24,15 @@ public static class ArchSystemsSorter
             edges[from] = list = ListPool<Type>.Get();
         list.Add(to);
     }
+    
+    /// <summary>
+    ///     Called from auto-generated code, validate edges belong to the same group
+    /// </summary>
+    public static void ValidateEdge(List<DisconnectedDependenciesInfo.WrongTypeBinding> disconnectedDependencies, Type declaredOn, Type group, Type dependencyType, Type dependencyGroup)
+    {
+        if (group != dependencyGroup)
+            disconnectedDependencies.Add(new DisconnectedDependenciesInfo.WrongTypeBinding(dependencyType, declaredOn));
+    }
         
     internal static List<ExecutionNode<float>> SortSystems(Dictionary<Type, ExecutionNode<float>> systems, Dictionary<Type, List<Type>> edges)
     {

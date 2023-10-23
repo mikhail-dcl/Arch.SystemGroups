@@ -33,7 +33,7 @@ public partial class SystemCGroupAA : BaseSystem<TestWorld2, float>
 // Group AB
 
 [UpdateInGroup(typeof(GroupAB))]
-[UpdateBefore(typeof(SystemCGroupAA))] // < -- ignore
+// [UpdateBefore(typeof(SystemCGroupAA))] // no tolerance
 [UpdateBefore(typeof(SystemCGroupAB))]
 public partial class SystemAGroupAB : BaseSystem<TestWorld2, float>
 {

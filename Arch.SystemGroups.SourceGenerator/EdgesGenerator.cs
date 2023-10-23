@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
 
@@ -7,6 +8,36 @@ namespace Arch.SystemGroups.SourceGenerator
     public static class EdgesGenerator
     {
         public const string AddEdgesCachedFieldName = "_addEdgesCached";
+        public const string ValidateEdgesCachedFieldName = "_validateEdgesCached";
+        public const string ValidateEdgesMethodName = "ValidateEdges";
+        public const string DisconnectedDependenciesFieldName = "disconnectedDependencies";
+        
+        public static string GetValidateEdgesCachedField() =>
+            $"private static readonly Action<List<DisconnectedDependenciesInfo.WrongTypeBinding>> {ValidateEdgesCachedFieldName} = {ValidateEdgesMethodName};";
+
+        public static string GetValidateEdgesBody(IList<ITypeSymbol> updateBefore, IList<ITypeSymbol> updateAfter, 
+            ITypeSymbol group, string className, ITypeSymbol thisType, string typeGenericArguments)
+        {
+            var builder = new StringBuilder();
+
+            foreach (var dependency in updateBefore)
+                InsertValidateEdge(dependency);
+            
+            foreach (var dependency in updateAfter)
+                InsertValidateEdge(dependency);
+
+            return builder.ToString();
+
+            void InsertValidateEdge(ITypeSymbol dependency)
+            {
+                // Filter out references to self
+                if (dependency.Equals(thisType, SymbolEqualityComparer.Default))
+                    return;
+
+                builder.AppendFormat(
+                    $"ArchSystemsSorter.ValidateEdge({DisconnectedDependenciesFieldName}, typeof({className}{typeGenericArguments}), typeof({group}), typeof({dependency}), {dependency}.Metadata.UpdateInGroup);");
+            }
+        }
         
         public static string GetAddEdgesCachedField() =>
             $"private static readonly Action<Dictionary<Type, List<Type>>> {AddEdgesCachedFieldName} = AddEdges;";
