@@ -1,96 +1,97 @@
 ﻿using Arch.System;
 
-namespace Arch.SystemGroups;
-
-internal readonly struct ExecutionNode<T>
+namespace Arch.SystemGroups
 {
-    public readonly bool ThrottlingEnabled;
-    public readonly bool IsGroup;
-    public readonly ISystem<T> System;
-    public readonly CustomGroupBase<T> CustomGroup;
+    internal readonly struct ExecutionNode<T>
+    {
+        public readonly bool ThrottlingEnabled;
+        public readonly bool IsGroup;
+        public readonly ISystem<T> System;
+        public readonly CustomGroupBase<T> CustomGroup;
 
-    public ExecutionNode(ISystem<T> system, bool throttlingEnabled)
-    {
-        ThrottlingEnabled = throttlingEnabled;
-        System = system;
-        CustomGroup = null;
-        IsGroup = false;
-    }
+        public ExecutionNode(ISystem<T> system, bool throttlingEnabled)
+        {
+            ThrottlingEnabled = throttlingEnabled;
+            System = system;
+            CustomGroup = null;
+            IsGroup = false;
+        }
 
-    public ExecutionNode(CustomGroupBase<T> customGroup, bool throttlingEnabled)
-    {
-        IsGroup = true;
-        ThrottlingEnabled = throttlingEnabled;
-        CustomGroup = customGroup;
-        System = null;
-    }
+        public ExecutionNode(CustomGroupBase<T> customGroup, bool throttlingEnabled)
+        {
+            IsGroup = true;
+            ThrottlingEnabled = throttlingEnabled;
+            CustomGroup = customGroup;
+            System = null;
+        }
     
-    public void Initialize()
-    {
-        if (IsGroup)
+        public void Initialize()
         {
-            CustomGroup.Initialize();
+            if (IsGroup)
+            {
+                CustomGroup.Initialize();
+            }
+            else
+            {
+                System.Initialize();
+            }
         }
-        else
-        {
-            System.Initialize();
-        }
-    }
     
-    public void Dispose()
-    {
-        if (IsGroup)
+        public void Dispose()
         {
-            CustomGroup.Dispose();
+            if (IsGroup)
+            {
+                CustomGroup.Dispose();
+            }
+            else
+            {
+                System.Dispose();
+            }
         }
-        else
-        {
-            System.Dispose();
-        }
-    }
     
-    public void BeforeUpdate(in T t, bool throttle)
-    {
-        if (throttle && ThrottlingEnabled)
-            return;
+        public void BeforeUpdate(in T t, bool throttle)
+        {
+            if (throttle && ThrottlingEnabled)
+                return;
         
-        if (IsGroup)
-        {
-            CustomGroup.BeforeUpdate(t, throttle);
+            if (IsGroup)
+            {
+                CustomGroup.BeforeUpdate(t, throttle);
+            }
+            else
+            {
+                System.BeforeUpdate(t);
+            }
         }
-        else
-        {
-            System.BeforeUpdate(t);
-        }
-    }
     
-    public void Update(in T t, bool throttle)
-    {
-        if (throttle && ThrottlingEnabled)
-            return;
+        public void Update(in T t, bool throttle)
+        {
+            if (throttle && ThrottlingEnabled)
+                return;
         
-        if (IsGroup)
-        {
-            CustomGroup.Update(t, throttle);
+            if (IsGroup)
+            {
+                CustomGroup.Update(t, throttle);
+            }
+            else
+            {
+                System.Update(t);
+            }
         }
-        else
-        {
-            System.Update(t);
-        }
-    }
     
-    public void AfterUpdate(in T t, bool throttle)
-    {
-        if (throttle && ThrottlingEnabled)
-            return;
+        public void AfterUpdate(in T t, bool throttle)
+        {
+            if (throttle && ThrottlingEnabled)
+                return;
         
-        if (IsGroup)
-        {
-            CustomGroup.AfterUpdate(t, throttle);
-        }
-        else
-        {
-            System.AfterUpdate(t);
+            if (IsGroup)
+            {
+                CustomGroup.AfterUpdate(t, throttle);
+            }
+            else
+            {
+                System.AfterUpdate(t);
+            }
         }
     }
 }
