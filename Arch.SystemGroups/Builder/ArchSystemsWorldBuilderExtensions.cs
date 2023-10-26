@@ -1,16 +1,17 @@
-namespace Arch.SystemGroups;
-
-/// <summary>
-/// Publicly available extensions for the ArchSystemsWorldBuilder
-/// </summary>
-public static class ArchSystemsWorldBuilderExtensions
+namespace Arch.SystemGroups
 {
     /// <summary>
-    /// Inject a custom group into the world. It allows to create a group with custom parameters.
+    /// Publicly available extensions for the ArchSystemsWorldBuilder
     /// </summary>
-    public static ref ArchSystemsWorldBuilder<T> InjectCustomGroup<T, TGroup>(ref this ArchSystemsWorldBuilder<T> builder, TGroup group) where TGroup : CustomGroupBase<float>
+    public static class ArchSystemsWorldBuilderExtensions
     {
-        builder.AddCustomGroup(group);
-        return ref builder;
+        /// <summary>
+        /// Inject a custom group into the world. It allows to create a group with custom parameters.
+        /// </summary>
+        public static ref ArchSystemsWorldBuilder<T> InjectCustomGroup<T, TGroup>(ref this ArchSystemsWorldBuilder<T> builder, TGroup group) where TGroup : CustomGroupBase<float>
+        {
+            builder.AddCustomGroup(group);
+            return ref builder;
+        }
     }
 }
