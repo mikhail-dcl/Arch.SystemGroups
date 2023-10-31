@@ -31,7 +31,7 @@ public class DescriptorTests
     public void CreatesSystemDescriptorInEachGroup(string group)
     {
         var systemGroupWorld = _worldBuilder.Finish();
-        var descriptor = systemGroupWorld.GenerateDescriptor();
+        var descriptor = systemGroupWorld.GenerateDescriptors();
         Assert.That(descriptor.Where(x => x.Name == group).Count(), Is.EqualTo(1));
     }
     
@@ -39,7 +39,7 @@ public class DescriptorTests
     public void CreatesAllSystemDescriptors()
     {
         var systemGroupWorld = _worldBuilder.Finish();
-        var descriptor = systemGroupWorld.GenerateDescriptor();
+        var descriptor = systemGroupWorld.GenerateDescriptors();
         Assert.That(descriptor.Count, Is.EqualTo(6));
     }
 }

@@ -11,61 +11,53 @@ public static partial class SystemGroupWorldExtensions
     /// Generate the descriptor for the SystemGroupWorld
     /// </summary>
     /// <param name="world"></param>
-    public static IReadOnlyList<SystemGroupDescriptor> GenerateDescriptor(this SystemGroupWorld world)
+    public static IReadOnlyList<SystemGroupDescriptor> GenerateDescriptors(this SystemGroupWorld world)
     {
         var descriptors = new List<SystemGroupDescriptor>();
+        // Foreach system group such as initialization, simulation, presentation
         foreach (var worldSystemGroup in world.SystemGroups)
         {
-            var groupSystems = new List<SystemDescriptor>();
-            IReadOnlyList<SystemGroupDescriptor> subGroups = null;
-
-            if (worldSystemGroup.Nodes is not null)
-            {
-                foreach (var node in worldSystemGroup.Nodes)
-                {
-                    if (node.IsGroup)
-                    {
-                        subGroups = GenerateGroupDescriptor(node.CustomGroup);
-                    }
-                    else
-                    {
-                        groupSystems.Add(new SystemDescriptor(node.System.GetType().Name, node.ThrottlingEnabled));
-                    }
-                }   
-            }
-            
-            descriptors.Add(new SystemGroupDescriptor(worldSystemGroup.GetType().Name, groupSystems, subGroups));
+            descriptors.Add(GenerateGroupDescriptor(worldSystemGroup.GetType().Name, worldSystemGroup.Nodes));
         }
 
         return descriptors;
+    }
+
+    /// <summary>
+    /// Generate the descriptor for the SystemGroup
+    /// </summary>
+    /// <param name="name">Name of the system group</param>
+    /// <param name="nodes">List of nodes within the system group</param>
+    private static SystemGroupDescriptor GenerateGroupDescriptor(string name, IReadOnlyList<ExecutionNode<float>> nodes)
+    {
+        var groupSystems = new List<SystemDescriptor>();
+        var groupNestedGroups = new List<SystemGroupDescriptor>();
+        GenerateNestedGroupDescriptors(nodes, ref groupSystems, ref groupNestedGroups);
+        return new SystemGroupDescriptor(name, groupSystems, groupNestedGroups
+        );
     }
     
     /// <summary>
     /// Generate the descriptor for the SystemGroupWorld
     /// </summary>
-    /// <param name="world"></param>
-    private static IReadOnlyList<SystemGroupDescriptor> GenerateGroupDescriptor(CustomGroupBase<float> customGroup)
+    /// <param name="nodes"></param>
+    /// <param name="groupSystems"></param>
+    /// <param name="groupNestedGroups"></param>
+    /// <returns></returns>
+    private static void GenerateNestedGroupDescriptors(IReadOnlyList<ExecutionNode<float>> nodes,
+        ref List<SystemDescriptor> groupSystems, ref List<SystemGroupDescriptor> groupNestedGroups)
     {
-        var descriptors = new List<SystemGroupDescriptor>();
-        var groupSystems = new List<SystemDescriptor>();
-        IReadOnlyList<SystemGroupDescriptor> subGroups = null;
-
-        if (customGroup.Nodes is not null)
+        if(nodes is null) return;
+        foreach (var node in nodes)
         {
-            foreach (var node in customGroup.Nodes)
+            if (node.IsGroup)
             {
-                if (node.IsGroup)
-                {
-                    subGroups = GenerateGroupDescriptor(node.CustomGroup);
-                }
-                else
-                {
-                    groupSystems.Add(new SystemDescriptor(node.System.GetType().Name, node.ThrottlingEnabled));
-                }
-            }   
+                groupNestedGroups.Add(GenerateGroupDescriptor(node.CustomGroup.GetType().Name, node.CustomGroup.Nodes));
+            }
+            else
+            {
+                groupSystems.Add(new SystemDescriptor(node.System.GetType().Name, node.ThrottlingEnabled));
+            }
         }
-            
-        descriptors.Add(new SystemGroupDescriptor(customGroup.GetType().Name, groupSystems, subGroups));
-        return descriptors;
     }
 }

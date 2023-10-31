@@ -21,7 +21,7 @@ public class NestedDescriptorTests
     {
         var systemGroupWorld = _worldBuilder.Finish();
         var simulationSystemGroup =
-            systemGroupWorld.GenerateDescriptor().FirstOrDefault(x => x.Name == nameof(SimulationSystemGroup));
+            systemGroupWorld.GenerateDescriptors().FirstOrDefault(x => x.Name == nameof(SimulationSystemGroup));
         var root = simulationSystemGroup.Groups.First();
         var firstLevel = root.Groups.First();
         var secondLevel = firstLevel.Groups.First();
