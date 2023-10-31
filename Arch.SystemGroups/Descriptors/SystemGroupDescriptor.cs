@@ -12,6 +12,7 @@ namespace Arch.SystemGroups.Descriptors;
         /// </summary>
         /// <param name="name">name of the system group</param>
         /// <param name="systems">a list of systems within this group</param>
+        /// <param name="groups">A list of subGroups within this group</param>
         public SystemGroupDescriptor(string name, IReadOnlyList<SystemDescriptor> systems, IReadOnlyList<SystemGroupDescriptor> groups)
         {
             Name = name;
@@ -30,7 +31,7 @@ namespace Arch.SystemGroups.Descriptors;
         public IReadOnlyList<SystemDescriptor> Systems { get; }
         
         /// <summary>
-        /// SubSystems within this group
+        /// Sub Groups within this group
         /// </summary>
         public IReadOnlyList<SystemGroupDescriptor> Groups { get; }
     }
