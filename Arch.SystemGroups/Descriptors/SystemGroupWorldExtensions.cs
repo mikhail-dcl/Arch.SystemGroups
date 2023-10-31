@@ -1,16 +1,18 @@
 using System.Collections.Generic;
+using JetBrains.Annotations;
 
 namespace Arch.SystemGroups.Descriptors;
 
 /// <summary>
 /// Extensions for SystemGroupWorld
 /// </summary>
-public static partial class SystemGroupWorldExtensions
+public static class SystemGroupWorldExtensions
 {
     /// <summary>
     /// Generate the descriptor for the SystemGroupWorld
     /// </summary>
     /// <param name="world"></param>
+    [UsedImplicitly]
     public static IReadOnlyList<SystemGroupDescriptor> GenerateDescriptors(this SystemGroupWorld world)
     {
         var descriptors = new List<SystemGroupDescriptor>();
