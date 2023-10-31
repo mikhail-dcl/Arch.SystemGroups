@@ -2,7 +2,7 @@
 using Arch.SystemGroups.DefaultSystemGroups;
 using Arch.SystemGroups.Tests.TestSetup1;
 
-namespace Arch.SystemGroups.Tests.DescriptorTests
+namespace Arch.SystemGroups.Tests.DescriptorTests.SystemGroups
 {
     [UpdateInGroup(typeof(InitializationSystemGroup))]
     public partial class InitSystemGroupSystemTest : BaseSystem<TestWorld, float>

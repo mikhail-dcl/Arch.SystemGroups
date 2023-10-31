@@ -1,5 +1,6 @@
 ﻿using Arch.SystemGroups.DefaultSystemGroups;
 using Arch.SystemGroups.Descriptors;
+using Arch.SystemGroups.Tests.NestedGroups;
 using Arch.SystemGroups.Tests.TestSetup1;
 using NSubstitute;
 
@@ -13,7 +14,7 @@ public class DescriptorTests
     public void SetUp()
     {
         _worldBuilder = new ArchSystemsWorldBuilder<TestWorld>(new TestWorld(), Substitute.For<IPlayerLoop>());
-        InitSystemGroupSystemTest.InjectToWorld(ref _worldBuilder);
+        SystemGroups.InitSystemGroupSystemTest.InjectToWorld(ref _worldBuilder);
         PhysicsSystemGroupSystemTest.InjectToWorld(ref _worldBuilder);
         PostPhysicsSystemGroupSystemTest.InjectToWorld(ref _worldBuilder);
         PostRenderingSystemGroupSystemTest.InjectToWorld(ref _worldBuilder);
