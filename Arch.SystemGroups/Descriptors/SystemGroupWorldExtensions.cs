@@ -34,7 +34,7 @@ public static class SystemGroupWorldExtensions
     {
         var groupSystems = new List<SystemDescriptor>();
         var groupNestedGroups = new List<SystemGroupDescriptor>();
-        GenerateNestedGroupDescriptors(nodes, ref groupSystems, ref groupNestedGroups);
+        GenerateNestedGroupDescriptors(nodes, groupSystems, groupNestedGroups);
         return new SystemGroupDescriptor(name, groupSystems, groupNestedGroups
         );
     }
@@ -47,7 +47,7 @@ public static class SystemGroupWorldExtensions
     /// <param name="groupNestedGroups"></param>
     /// <returns></returns>
     private static void GenerateNestedGroupDescriptors(IReadOnlyList<ExecutionNode<float>> nodes,
-        ref List<SystemDescriptor> groupSystems, ref List<SystemGroupDescriptor> groupNestedGroups)
+        List<SystemDescriptor> groupSystems, List<SystemGroupDescriptor> groupNestedGroups)
     {
         if(nodes is null) return;
         foreach (var node in nodes)
