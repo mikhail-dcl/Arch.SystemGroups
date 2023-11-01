@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 
-namespace Arch.SystemGroups.Descriptors;
-
+namespace Arch.SystemGroups.Descriptors
+{
     /// <summary>
     /// Descriptor for a SystemGroup
     /// </summary>
@@ -35,3 +35,4 @@ namespace Arch.SystemGroups.Descriptors;
         /// </summary>
         public IReadOnlyList<SystemGroupDescriptor> Groups { get; }
     }
+}
