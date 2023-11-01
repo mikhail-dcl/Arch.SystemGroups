@@ -3,22 +3,23 @@ using Arch.SystemGroups.Throttling;
 using Arch.SystemGroups.UnityBridge;
 using JetBrains.Annotations;
 
-namespace Arch.SystemGroups.DefaultSystemGroups;
-
-/// <summary>
-/// Updates at the end of the Update phase of the player loop
-/// </summary>
-public class SimulationSystemGroup : SystemGroup
+namespace Arch.SystemGroups.DefaultSystemGroups
 {
-    internal SimulationSystemGroup(List<ExecutionNode<float>> systems, [CanBeNull] ISystemGroupThrottler throttler,
-        [CanBeNull] ISystemGroupExceptionHandler exceptionHandler) : base(systems, throttler, exceptionHandler)
+    /// <summary>
+    /// Updates at the end of the Update phase of the player loop
+    /// </summary>
+    public class SimulationSystemGroup : SystemGroup
     {
-    }
+        internal SimulationSystemGroup(List<ExecutionNode<float>> systems, [CanBeNull] ISystemGroupThrottler throttler,
+            [CanBeNull] ISystemGroupExceptionHandler exceptionHandler) : base(systems, throttler, exceptionHandler)
+        {
+        }
     
-    internal static readonly SimulationSystemGroup Empty = new (null, null, null);
+        internal static readonly SimulationSystemGroup Empty = new (null, null, null);
 
-    public override void Update()
-    {
-        Update(TimeProvider.GetInfo());
+        public override void Update()
+        {
+            Update(TimeProvider.GetInfo());
+        }
     }
 }

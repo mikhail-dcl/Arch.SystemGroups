@@ -3,22 +3,23 @@ using Arch.SystemGroups.Throttling;
 using Arch.SystemGroups.UnityBridge;
 using JetBrains.Annotations;
 
-namespace Arch.SystemGroups.DefaultSystemGroups;
-
-/// <summary>
-/// Updates at the end of the PostLateUpdate phase of the player loop.
-/// </summary>
-public class PostRenderingSystemGroup : SystemGroup
+namespace Arch.SystemGroups.DefaultSystemGroups
 {
-    internal PostRenderingSystemGroup(List<ExecutionNode<float>> nodes, [CanBeNull] ISystemGroupThrottler throttler, 
-        [CanBeNull] ISystemGroupExceptionHandler exceptionHandler) : base(nodes, throttler, exceptionHandler)
+    /// <summary>
+    /// Updates at the end of the PostLateUpdate phase of the player loop.
+    /// </summary>
+    public class PostRenderingSystemGroup : SystemGroup
     {
-    }
+        internal PostRenderingSystemGroup(List<ExecutionNode<float>> nodes, [CanBeNull] ISystemGroupThrottler throttler, 
+            [CanBeNull] ISystemGroupExceptionHandler exceptionHandler) : base(nodes, throttler, exceptionHandler)
+        {
+        }
     
-    internal static readonly PostRenderingSystemGroup Empty = new (null, null, null);
+        internal static readonly PostRenderingSystemGroup Empty = new (null, null, null);
 
-    public override void Update()
-    {
-        Update(TimeProvider.GetInfo());
+        public override void Update()
+        {
+            Update(TimeProvider.GetInfo());
+        }
     }
 }
