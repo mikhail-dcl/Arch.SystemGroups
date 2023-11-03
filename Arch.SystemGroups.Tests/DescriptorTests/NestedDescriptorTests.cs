@@ -22,13 +22,20 @@ public class NestedDescriptorTests
         var systemGroupWorld = _worldBuilder.Finish();
         var simulationSystemGroup =
             systemGroupWorld.GenerateDescriptors().FirstOrDefault(x => x.Name == nameof(SimulationSystemGroup));
-        var root = simulationSystemGroup.Groups.First();
-        var firstLevel = root.Groups.First();
-        var secondLevel = firstLevel.Groups.First();
+        var root = simulationSystemGroup.SubDescriptors.First();
+        var firstLevel = root.SubDescriptors.First();
+        var secondLevel = firstLevel.SubDescriptors.First();
         
         Assert.That(root.Name, Is.EqualTo(nameof(RootGroup)));
+        Assert.True(root.IsGroup);
+        
         Assert.That(firstLevel.Name, Is.EqualTo(nameof(NestedGroup1)));
+        Assert.True(firstLevel.IsGroup);
+        
         Assert.That(secondLevel.Name, Is.EqualTo(nameof(NestedGroup2)));
-        Assert.That(secondLevel.Systems.First().Name, Is.EqualTo(nameof(SystemInNestedGroup)));
+        Assert.True(secondLevel.IsGroup);
+        
+        Assert.True(secondLevel.SubDescriptors.First().IsSystem);
+        Assert.That(secondLevel.SubDescriptors.First().Name, Is.EqualTo(nameof(SystemInNestedGroup)));
     }
 }

@@ -1,64 +1,64 @@
 using System.Collections.Generic;
 using JetBrains.Annotations;
 
-namespace Arch.SystemGroups.Descriptors;
-
-/// <summary>
-/// Extensions for SystemGroupWorld
-/// </summary>
-public static class SystemGroupWorldExtensions
+namespace Arch.SystemGroups.Descriptors
 {
     /// <summary>
-    /// Generate the descriptor for the SystemGroupWorld
+    /// Extensions for SystemGroupWorld
     /// </summary>
-    /// <param name="world"></param>
-    [UsedImplicitly]
-    public static IReadOnlyList<SystemGroupDescriptor> GenerateDescriptors(this SystemGroupWorld world)
+    public static class SystemGroupWorldExtensions
     {
-        var descriptors = new List<SystemGroupDescriptor>();
-        // Foreach system group such as initialization, simulation, presentation
-        foreach (var worldSystemGroup in world.SystemGroups)
+        /// <summary>
+        /// Generate the descriptor for the SystemGroupWorld
+        /// </summary>
+        /// <param name="world"></param>
+        [UsedImplicitly]
+        public static IReadOnlyList<Descriptor> GenerateDescriptors(this SystemGroupWorld world)
         {
-            descriptors.Add(GenerateGroupDescriptor(worldSystemGroup.GetType().Name, worldSystemGroup.Nodes));
+            var descriptors = new List<Descriptor>();
+            // Foreach system group such as initialization, simulation, presentation
+            foreach (var worldSystemGroup in world.SystemGroups)
+            {
+                // Throttling is not possible on a root level
+                descriptors.Add(GenerateGroupDescriptor(worldSystemGroup.GetType().Name, false, worldSystemGroup.Nodes));
+            }
+
+            return descriptors;
         }
 
-        return descriptors;
-    }
-
-    /// <summary>
-    /// Generate the descriptor for the SystemGroup
-    /// </summary>
-    /// <param name="name">Name of the system group</param>
-    /// <param name="nodes">List of nodes within the system group</param>
-    private static SystemGroupDescriptor GenerateGroupDescriptor(string name, IReadOnlyList<ExecutionNode<float>> nodes)
-    {
-        var groupSystems = new List<SystemDescriptor>();
-        var groupNestedGroups = new List<SystemGroupDescriptor>();
-        GenerateNestedGroupDescriptors(nodes, groupSystems, groupNestedGroups);
-        return new SystemGroupDescriptor(name, groupSystems, groupNestedGroups
-        );
-    }
-    
-    /// <summary>
-    /// Generate the descriptor for the SystemGroupWorld
-    /// </summary>
-    /// <param name="nodes"></param>
-    /// <param name="groupSystems"></param>
-    /// <param name="groupNestedGroups"></param>
-    /// <returns></returns>
-    private static void GenerateNestedGroupDescriptors(IReadOnlyList<ExecutionNode<float>> nodes,
-        List<SystemDescriptor> groupSystems, List<SystemGroupDescriptor> groupNestedGroups)
-    {
-        if(nodes is null) return;
-        foreach (var node in nodes)
+        /// <summary>
+        /// Generate the descriptor for the SystemGroup
+        /// </summary>
+        /// <param name="name">Name of the system group</param>
+        /// <param name="throttlingEnabled">Determines if this group has throttling enabled</param>
+        /// <param name="nodes">List of nodes within the system group</param>
+        private static Descriptor GenerateGroupDescriptor(string name, bool throttlingEnabled, IReadOnlyList<ExecutionNode<float>> nodes)
         {
-            if (node.IsGroup)
+            var descriptors = new List<Descriptor>();
+            GenerateNestedGroupDescriptors(nodes, descriptors);
+            return new Descriptor(name,throttlingEnabled,descriptors);
+        }
+
+        /// <summary>
+        /// Generate the descriptor for the SystemGroupWorld
+        /// </summary>
+        /// <param name="nodes">A list of execution nodes</param>
+        /// <param name="descriptors">A list of descriptors</param>
+        /// <returns></returns>
+        private static void GenerateNestedGroupDescriptors(IReadOnlyList<ExecutionNode<float>> nodes,
+            List<Descriptor> descriptors)
+        {
+            if(nodes is null) return;
+            foreach (var node in nodes)
             {
-                groupNestedGroups.Add(GenerateGroupDescriptor(node.CustomGroup.GetType().Name, node.CustomGroup.Nodes));
-            }
-            else
-            {
-                groupSystems.Add(new SystemDescriptor(node.System.GetType().Name, node.ThrottlingEnabled));
+                if (node.IsGroup)
+                {
+                    descriptors.Add(GenerateGroupDescriptor(node.CustomGroup.GetType().Name, node.ThrottlingEnabled, node.CustomGroup.Nodes));
+                }
+                else
+                {
+                    descriptors.Add(new Descriptor(node.System.GetType().Name, node.ThrottlingEnabled));
+                }
             }
         }
     }
