@@ -170,6 +170,7 @@ namespace Arch.SystemGroups
             var initializationSystemGroup = InitializationSystemGroup.Empty;
             var simulationSystemGroup = SimulationSystemGroup.Empty;
             var presentationSystemGroup = PresentationSystemGroup.Empty;
+            var preRenderingSystemGroup = PreRenderingSystemGroup.Empty;
             var postRenderingSystemGroup = PostRenderingSystemGroup.Empty;
             var physicsSystemGroup = PhysicsSystemGroup.Empty;
             var postPhysicsSystemGroup = PostPhysicsSystemGroup.Empty;
@@ -180,6 +181,7 @@ namespace Arch.SystemGroups
             CreateSystemGroup(ref initializationSystemGroup, CreateInitializationSystemGroup, disconnectedDependencies);
             CreateSystemGroup(ref simulationSystemGroup, CreateSimulationSystemGroup, disconnectedDependencies);
             CreateSystemGroup(ref presentationSystemGroup, CreatePresentationSystemGroup, disconnectedDependencies);
+            CreateSystemGroup(ref preRenderingSystemGroup, CreatePreRenderingSystemGroup, disconnectedDependencies);
             CreateSystemGroup(ref postRenderingSystemGroup, CreatePostRenderingSystemGroup, disconnectedDependencies);
             CreateSystemGroup(ref physicsSystemGroup, CreatePhysicsSystemGroup, disconnectedDependencies);
             CreateSystemGroup(ref postPhysicsSystemGroup, CreatePostPhysicsSystemGroup, disconnectedDependencies);
@@ -215,6 +217,7 @@ namespace Arch.SystemGroups
                 initializationSystemGroup,
                 simulationSystemGroup,
                 presentationSystemGroup,
+                preRenderingSystemGroup,
                 postRenderingSystemGroup,
                 physicsSystemGroup,
                 postPhysicsSystemGroup
@@ -225,6 +228,7 @@ namespace Arch.SystemGroups
                 initializationSystemGroup,
                 simulationSystemGroup,
                 presentationSystemGroup,
+                preRenderingSystemGroup,
                 postRenderingSystemGroup,
                 physicsSystemGroup,
                 postPhysicsSystemGroup
@@ -239,6 +243,11 @@ namespace Arch.SystemGroups
         private PhysicsSystemGroup CreatePhysicsSystemGroup(List<ExecutionNode<float>> list)
         {
             return new PhysicsSystemGroup(list, _fixedUpdateBasedSystemGroupThrottler, _exceptionHandler);
+        }
+        
+        private PreRenderingSystemGroup CreatePreRenderingSystemGroup(List<ExecutionNode<float>> list)
+        {
+            return new PreRenderingSystemGroup(list, _updateBasedSystemGroupThrottler, _exceptionHandler);
         }
 
         private PostRenderingSystemGroup CreatePostRenderingSystemGroup(List<ExecutionNode<float>> list)

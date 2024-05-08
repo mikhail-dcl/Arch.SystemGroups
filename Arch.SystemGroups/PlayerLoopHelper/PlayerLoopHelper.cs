@@ -31,6 +31,7 @@ namespace Arch.SystemGroups
             InitializationSystemGroup initializationSystemGroup,
             SimulationSystemGroup simulationSystemGroup,
             PresentationSystemGroup presentationSystemGroup,
+            PreRenderingSystemGroup preRenderingSystemGroup,
             PostRenderingSystemGroup postRenderingSystemGroup,
             PhysicsSystemGroup physicsSystemGroup,
             PostPhysicsSystemGroup postPhysicsSystemGroup)
@@ -40,6 +41,7 @@ namespace Arch.SystemGroups
             playerLoop.AddSystemToPlayerLoop(data, initializationSystemGroup, systemGroupAggregateFactory);
             playerLoop.AddSystemToPlayerLoop(data, simulationSystemGroup, systemGroupAggregateFactory);
             playerLoop.AddSystemToPlayerLoop(data, presentationSystemGroup, systemGroupAggregateFactory);
+            playerLoop.AddSystemToPlayerLoop(data, preRenderingSystemGroup, systemGroupAggregateFactory);
             playerLoop.AddSystemToPlayerLoop(data, postRenderingSystemGroup, systemGroupAggregateFactory);
             playerLoop.AddSystemToPlayerLoop(data, physicsSystemGroup, systemGroupAggregateFactory);
             playerLoop.AddSystemToPlayerLoop(data, postPhysicsSystemGroup, systemGroupAggregateFactory);

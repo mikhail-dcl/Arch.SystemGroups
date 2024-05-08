@@ -3,7 +3,7 @@ using Arch.SystemGroups.UnityBridge;
 
 namespace Arch.SystemGroups.Throttling
 {
-    /// <summary
+    /// <summary>
     ///     Provides a way to throttle systems in the root system group, reused for different system groups
     /// </summary>
     public interface ISystemGroupThrottler

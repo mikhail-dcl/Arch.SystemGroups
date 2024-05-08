@@ -69,6 +69,9 @@ namespace Arch.SystemGroups
 
             if (systemGroupType == typeof(PresentationSystemGroup))
                 return (typeof(PreLateUpdate), PlayerLoopAddMode.Append);
+            
+            if (systemGroupType == typeof(PreRenderingSystemGroup))
+                return (typeof(PostLateUpdate), PlayerLoopAddMode.Prepend);
 
             if (systemGroupType == typeof(PostRenderingSystemGroup))
                 return (typeof(PostLateUpdate), PlayerLoopAddMode.Append);
