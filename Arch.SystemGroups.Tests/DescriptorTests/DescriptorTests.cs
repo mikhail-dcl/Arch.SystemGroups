@@ -26,6 +26,7 @@ public class DescriptorTests
     [TestCase(nameof(InitializationSystemGroup))]
     [TestCase(nameof(PhysicsSystemGroup))]
     [TestCase(nameof(PostPhysicsSystemGroup))]
+    [TestCase(nameof(PreRenderingSystemGroup))]
     [TestCase(nameof(PostRenderingSystemGroup))]
     [TestCase(nameof(SimulationSystemGroup))]
     public void CreatesSystemDescriptorInEachGroup(string group)
@@ -40,6 +41,6 @@ public class DescriptorTests
     {
         var systemGroupWorld = _worldBuilder.Finish();
         var descriptor = systemGroupWorld.GenerateDescriptors();
-        Assert.That(descriptor.Count, Is.EqualTo(6));
+        Assert.That(descriptor.Count, Is.EqualTo(7));
     }
 }
