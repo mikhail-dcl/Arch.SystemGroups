@@ -256,7 +256,7 @@ public static class PartialClassGenerator
                     return system;
                 }
 
-                private static void AddEdges(Dictionary<Type, List<Type>> edgesMap)
+                internal static void AddEdges(Dictionary<Type, List<Type>> edgesMap)
                 {
                     {{addEdgesBody}}
                 }

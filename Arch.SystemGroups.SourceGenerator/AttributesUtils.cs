@@ -45,7 +45,6 @@ public static class AttributesUtils
                     {
                         action.Action(attribute);
                         resolvedMask |= 1 << index;
-                        break;
                     }
                 }
                 

@@ -44,6 +44,11 @@ public static class AssertHelpers
         CollectionAssert.AreEquivalent(expectedTypes, nodes.Select(n => n.IsGroup ? n.CustomGroup.GetType() : n.System.GetType()));
     }
     
+    internal static void AssertNodesEquality(List<ExecutionNode<float>> nodes, params Type[] expectedTypes)
+    {
+        CollectionAssert.AreEqual(expectedTypes, nodes.Select(n => n.IsGroup ? n.CustomGroup.GetType() : n.System.GetType()));
+    }
+    
     internal static T Find<T>(this List<ExecutionNode<float>> nodes)
     {
         foreach (var executionNode in nodes)
