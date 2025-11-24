@@ -1,0 +1,105 @@
+name: "PR - Build SourceGenerator DLL"
+
+on:
+  pull_request:
+    paths-ignore:
+      - '**/*.md'
+      - '**/*.gitignore'
+      - '**/*.gitattributes'
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  build-sourcegenerator:
+    name: Build and Upload SourceGenerator DLL
+    runs-on: ubuntu-latest
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: 1
+      DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
+      DOTNET_NOLOGO: true
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup .NET SDK
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: |
+          6.0.x
+          7.0.x
+
+    - name: Restore
+      run: dotnet restore
+
+    - name: Build SourceGenerator (Release)
+      run: dotnet build Arch.SystemGroups.SourceGenerator/Arch.SystemGroups.SourceGenerator.csproj --configuration Release --no-restore
+
+    - name: Upload SourceGenerator DLL
+      uses: actions/upload-artifact@v4
+      with:
+        name: Arch.SystemGroups.SourceGenerator-PR${{ github.event.pull_request.number }}-run${{ github.run_number }}
+        path: Arch.SystemGroups.SourceGenerator/bin/Release/netstandard2.0/Arch.SystemGroups.SourceGenerator.dll
+        retention-days: 30
+
+    - name: Comment on PR with artifact link
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const artifactName = `Arch.SystemGroups.SourceGenerator-PR${{ github.event.pull_request.number }}-run${{ github.run_number }}`;
+          const runId = context.runId;
+          const runNumber = '${{ github.run_number }}';
+          const repo = context.repo;
+
+          const comment = `## ✅ SourceGenerator DLL Built Successfully
+
+          The SourceGenerator DLL has been built in Release mode and is available for download.
+
+          **📦 Download:** [${artifactName}](https://github.com/${repo.owner}/${repo.repo}/actions/runs/${runId})
+
+          ### How to Download:
+          1. Click the link above (requires GitHub login)
+          2. Scroll to the "Artifacts" section at the bottom
+          3. Click the artifact name to download
+          4. **Extract the zip file** to get the DLL (GitHub artifacts are automatically zipped)
+
+          > **Note:** PR artifacts are zipped by GitHub. For direct DLL downloads without extraction, use the [Release workflow](https://github.com/${repo.owner}/${repo.repo}/actions/workflows/release.yaml) which attaches DLLs directly to releases.
+
+          **Build Details:**
+          - Configuration: Release
+          - Target Framework: netstandard2.0
+          - DLL: \`Arch.SystemGroups.SourceGenerator.dll\`
+          - Workflow Run: [#${runId}](https://github.com/${repo.owner}/${repo.repo}/actions/runs/${runId})
+          - Run Number: ${runNumber}
+          `;
+
+          // Check if we already commented
+          const { data: comments } = await github.rest.issues.listComments({
+            owner: repo.owner,
+            repo: repo.repo,
+            issue_number: context.issue.number,
+          });
+
+          const botComment = comments.find(comment =>
+            comment.user.type === 'Bot' &&
+            comment.body.includes('SourceGenerator DLL Built Successfully')
+          );
+
+          if (botComment) {
+            // Update existing comment
+            await github.rest.issues.updateComment({
+              owner: repo.owner,
+              repo: repo.repo,
+              comment_id: botComment.id,
+              body: comment
+            });
+          } else {
+            // Create new comment
+            await github.rest.issues.createComment({
+              owner: repo.owner,
+              repo: repo.repo,
+              issue_number: context.issue.number,
+              body: comment
+            });
+          }
