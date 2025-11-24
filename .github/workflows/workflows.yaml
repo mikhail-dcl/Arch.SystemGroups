@@ -5,6 +5,8 @@ name: "Continuous Integration"
 
 on:
   push:
+    branches:
+      - main
     paths-ignore:
       - '**/*.md'
       - '**/*.gitignore'
@@ -15,12 +17,6 @@ on:
       - '**/*.gitignore'
       - '**/*.gitattributes'
   workflow_dispatch:
-    branches:
-      - main
-    paths-ignore:
-      - '**/*.md'
-      - '**/*.gitignore'
-      - '**/*.gitattributes'
 
 permissions:
   contents: read
