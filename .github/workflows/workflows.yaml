@@ -21,7 +21,12 @@ on:
       - '**/*.md'
       - '**/*.gitignore'
       - '**/*.gitattributes'
-      
+
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+
 jobs:
   build:
     name: Build Arch.SystemGroups
@@ -40,10 +45,10 @@ jobs:
       fail-fast: false
 
     steps:
-    - uses: actions/checkout@v3
-      
+    - uses: actions/checkout@v4
+
     - name: Setup .NET SDK
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v4
       with:
         dotnet-version: |
           6.0.x
@@ -58,10 +63,21 @@ jobs:
     - name: Test
       run: dotnet test --logger trx --results-directory "TestResults"
 
-    - name: Upload dotnet test results
-      uses: actions/upload-artifact@v3
+    - name: Publish Test Results
+      uses: EnricoMi/publish-unit-test-result-action@v2
+      if: always()
       with:
-        name: dotnet-results
+        files: |
+          TestResults/**/*.trx
+        check_name: '.NET Test Results'
+        comment_title: '🧪 Test Results'
+        report_individual_runs: true
+        deduplicate_classes_by_file_name: false
+
+    - name: Upload dotnet test results
+      uses: actions/upload-artifact@v4
+      with:
+        name: dotnet-results-${{ github.run_number }}
         path: TestResults
       # Use always() to always run this step to publish test results when there are test failures
       if: ${{ always() }}
