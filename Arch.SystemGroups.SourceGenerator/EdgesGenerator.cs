@@ -21,10 +21,18 @@ namespace Arch.SystemGroups.SourceGenerator
             var builder = new StringBuilder();
 
             foreach (var dependency in updateBefore)
+            {
+                builder.AppendLine($"// [UpdateBefore({dependency})]");
+                
                 InsertValidateEdge(dependency);
-            
+            }
+
             foreach (var dependency in updateAfter)
+            {
+                builder.AppendLine($"// [UpdateAfter({dependency})]");
+                
                 InsertValidateEdge(dependency);
+            }
 
             return builder.ToString();
 
@@ -51,6 +59,8 @@ namespace Arch.SystemGroups.SourceGenerator
                 // Filter out references to self
                 if (typeSymbol.Equals(thisType, SymbolEqualityComparer.Default))
                     continue;
+
+                builder.AppendLine($"// [UpdateAfter({typeSymbol})]");
                 
                 // Update After = from That Type to This
                 builder.AppendLine(
@@ -61,6 +71,8 @@ namespace Arch.SystemGroups.SourceGenerator
             {
                 if (typeSymbol.Equals(thisType, SymbolEqualityComparer.Default))
                     continue;
+                
+                builder.AppendLine($"// [UpdateBefore({typeSymbol})]");
                 
                 // Update Before = from This Type to That
                 builder.AppendLine(
