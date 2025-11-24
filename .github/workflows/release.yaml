@@ -1,0 +1,189 @@
+name: "Create Release"
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., v1.0.0)'
+        required: true
+        type: string
+      custom_description:
+        description: 'Custom release description (optional - leave empty to auto-generate from PRs)'
+        required: false
+        type: string
+      prerelease:
+        description: 'Mark as pre-release'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  create-release:
+    name: Build and Create Release
+    runs-on: ubuntu-latest
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: 1
+      DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
+      DOTNET_NOLOGO: true
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0  # Fetch all history for changelog generation
+
+    - name: Setup .NET SDK
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: |
+          6.0.x
+          7.0.x
+
+    - name: Restore
+      run: dotnet restore
+
+    - name: Build SourceGenerator (Release)
+      run: dotnet build Arch.SystemGroups.SourceGenerator/Arch.SystemGroups.SourceGenerator.csproj --configuration Release --no-restore
+
+    - name: Run Tests
+      run: dotnet test --configuration Release --no-restore --logger trx --results-directory "TestResults"
+
+    - name: Generate Release Notes
+      id: release_notes
+      uses: actions/github-script@v7
+      with:
+        result-encoding: string
+        script: |
+          const customDescription = `${{ github.event.inputs.custom_description }}`;
+
+          // If custom description provided, use it
+          if (customDescription && customDescription.trim() !== '') {
+            return customDescription;
+          }
+
+          // Otherwise, generate from merged PRs
+          const repo = context.repo;
+
+          // Get the latest release
+          let lastReleaseDate;
+          try {
+            const { data: latestRelease } = await github.rest.repos.getLatestRelease({
+              owner: repo.owner,
+              repo: repo.repo,
+            });
+            lastReleaseDate = latestRelease.created_at;
+          } catch (error) {
+            // No previous release, use repo creation date or a far back date
+            lastReleaseDate = '2020-01-01T00:00:00Z';
+          }
+
+          // Get merged PRs since last release
+          const { data: pullRequests } = await github.rest.pulls.list({
+            owner: repo.owner,
+            repo: repo.repo,
+            state: 'closed',
+            sort: 'updated',
+            direction: 'desc',
+            per_page: 100
+          });
+
+          const mergedPRs = pullRequests.filter(pr =>
+            pr.merged_at &&
+            new Date(pr.merged_at) > new Date(lastReleaseDate)
+          );
+
+          if (mergedPRs.length === 0) {
+            return '## Changes\n\nNo merged pull requests since last release.';
+          }
+
+          // Group PRs by type based on title/labels
+          const features = [];
+          const bugFixes = [];
+          const other = [];
+
+          for (const pr of mergedPRs) {
+            const title = pr.title.toLowerCase();
+            const labels = pr.labels.map(l => l.name.toLowerCase());
+
+            const prLink = `- ${pr.title} (#${pr.number}) @${pr.user.login}`;
+
+            if (title.startsWith('feat') || labels.includes('enhancement') || labels.includes('feature')) {
+              features.push(prLink);
+            } else if (title.startsWith('fix') || labels.includes('bug') || labels.includes('bugfix')) {
+              bugFixes.push(prLink);
+            } else {
+              other.push(prLink);
+            }
+          }
+
+          // Build release notes
+          let notes = '## What\'s Changed\n\n';
+
+          if (features.length > 0) {
+            notes += '### ✨ Features\n' + features.join('\n') + '\n\n';
+          }
+
+          if (bugFixes.length > 0) {
+            notes += '### 🐛 Bug Fixes\n' + bugFixes.join('\n') + '\n\n';
+          }
+
+          if (other.length > 0) {
+            notes += '### 🔧 Other Changes\n' + other.join('\n') + '\n\n';
+          }
+
+          notes += `\n**Full Changelog**: https://github.com/${repo.owner}/${repo.repo}/compare/${lastReleaseDate.split('T')[0]}...${{ github.event.inputs.version }}`;
+
+          return notes;
+
+    - name: Create Release
+      uses: actions/github-script@v7
+      env:
+        RELEASE_NOTES: ${{ steps.release_notes.outputs.result }}
+      with:
+        script: |
+          const fs = require('fs');
+          const repo = context.repo;
+
+          // Create the release
+          const { data: release } = await github.rest.repos.createRelease({
+            owner: repo.owner,
+            repo: repo.repo,
+            tag_name: '${{ github.event.inputs.version }}',
+            name: '${{ github.event.inputs.version }}',
+            body: process.env.RELEASE_NOTES,
+            draft: false,
+            prerelease: ${{ github.event.inputs.prerelease }},
+            target_commitish: context.sha
+          });
+
+          console.log(`Release created: ${release.html_url}`);
+
+          // Upload the SourceGenerator DLL as a release asset
+          const dllPath = 'Arch.SystemGroups.SourceGenerator/bin/Release/netstandard2.0/Arch.SystemGroups.SourceGenerator.dll';
+          const dllContent = fs.readFileSync(dllPath);
+
+          await github.rest.repos.uploadReleaseAsset({
+            owner: repo.owner,
+            repo: repo.repo,
+            release_id: release.id,
+            name: 'Arch.SystemGroups.SourceGenerator.dll',
+            data: dllContent,
+          });
+
+          console.log('SourceGenerator DLL uploaded successfully');
+
+          // Also create a summary
+          await core.summary
+            .addHeading('Release Created Successfully! 🎉')
+            .addLink('View Release', release.html_url)
+            .addRaw('\n\n')
+            .addHeading('Release Details', 3)
+            .addList([
+              `Version: ${{ github.event.inputs.version }}`,
+              `Pre-release: ${{ github.event.inputs.prerelease }}`,
+              `Assets: Arch.SystemGroups.SourceGenerator.dll`
+            ])
+            .write();
