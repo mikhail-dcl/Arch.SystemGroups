@@ -10,10 +10,64 @@ It is inspired by [Unity Entities' System Groups](https://docs.unity3d.com/Packa
 
 ## Installation
 
-- Make sure Unity 2022.2.9f1 is installed (the project is linked against this version)
-- Create a release build
-- Copy `Arch.SystemGroups.dll` into `Plugins` directory of your Unity project.
-- Copy `Arch.SystemGroups.SourceGenerator.dll` into the desired directory of your project, exclude all platforms, add a new Label "RoslynAnalyzer" to the assembly (see [Unity docs](https://docs.unity3d.com/Manual/roslyn-analyzers.html) for more information)
+### Prerequisites
+- Unity 2022.3+ is required
+- The project targets netstandard2.0/2.1
+
+### SourceGenerator Installation
+
+The SourceGenerator is required for automatic code generation. Choose one of the installation methods below:
+
+#### Option 1: From GitHub Releases (Recommended for Production)
+
+**For Unity Package Manager (UPM):**
+
+Add the SourceGenerator package URL to your Unity project's `manifest.json`:
+
+```json
+{
+  "dependencies": {
+    "com.arch.systemgroups.sourcegenerator": "https://github.com/mikhail-dcl/Arch.SystemGroups/releases/download/v1.0.0/com.arch.systemgroups.sourcegenerator-1.0.0.tgz"
+  }
+}
+```
+
+Replace `v1.0.0` with the desired release version.
+
+**Manual Installation:**
+
+1. Download `com.arch.systemgroups.sourcegenerator-{version}.tgz` from [Releases](https://github.com/mikhail-dcl/Arch.SystemGroups/releases)
+2. In Unity, go to **Window → Package Manager**
+3. Click **+ → Add package from tarball...**
+4. Select the downloaded `.tgz` file
+
+#### Option 2: From Pull Request Artifacts (For Testing)
+
+1. Navigate to the desired PR on GitHub
+2. Find the PR comment with the SourceGenerator artifact link
+3. Download and extract the artifact (single extraction)
+4. You'll get:
+   - `Arch.SystemGroups.SourceGenerator.dll`
+   - `Arch.SystemGroups.SourceGenerator.dll.meta` (pre-configured as RoslynAnalyzer)
+5. Copy both files to your Unity project (e.g., `Assets/Plugins/RoslynAnalyzers/`)
+6. Unity will automatically detect it as a Roslyn Analyzer
+
+#### Option 3: Manual Build
+
+1. Clone this repository
+2. Build the project in Release configuration:
+   ```bash
+   dotnet build Arch.SystemGroups.SourceGenerator/Arch.SystemGroups.SourceGenerator.csproj --configuration Release
+   ```
+3. Copy `Arch.SystemGroups.SourceGenerator.dll` from `bin/Release/netstandard2.0/` to your Unity project
+4. In Unity, select the DLL and configure it as a RoslynAnalyzer:
+   - Exclude all platforms in the Inspector
+   - Add the label `RoslynAnalyzer` (see [Unity docs](https://docs.unity3d.com/Manual/roslyn-analyzers.html))
+
+### Runtime Library Installation
+
+- Copy `Arch.SystemGroups.dll` into the `Plugins` directory of your Unity project, or
+- Install via Unity Package Manager using the main package: `com.arch.systemgroups`
 
 ## Update In Group
 

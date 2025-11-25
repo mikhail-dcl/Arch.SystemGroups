@@ -36,41 +36,16 @@ jobs:
     - name: Build SourceGenerator (Release)
       run: dotnet build Arch.SystemGroups.SourceGenerator/Arch.SystemGroups.SourceGenerator.csproj --configuration Release --no-restore
 
-    - name: Create SourceGenerator Unity Package
+    - name: Prepare SourceGenerator DLL with Unity Meta
       run: |
-        PACKAGE_DIR="com.arch.systemgroups.sourcegenerator"
-        PACKAGE_VERSION="1.0.0-pr.${{ github.event.pull_request.number }}.run${{ github.run_number }}"
+        DLL_DIR="SourceGenerator-Artifact"
+        mkdir -p "$DLL_DIR"
 
-        # Create package directory
-        mkdir -p "$PACKAGE_DIR"
-
-        # Copy SourceGenerator DLL
-        cp Arch.SystemGroups.SourceGenerator/bin/Release/netstandard2.0/Arch.SystemGroups.SourceGenerator.dll "$PACKAGE_DIR/"
-
-        # Create package.json
-        cat > "$PACKAGE_DIR/package.json" << EOF
-        {
-          "name": "com.arch.systemgroups.sourcegenerator",
-          "displayName": "Arch.SystemGroups SourceGenerator",
-          "version": "$PACKAGE_VERSION",
-          "unity": "2022.3",
-          "description": "Source Generator for Arch.SystemGroups - generates boilerplate code for ECS systems",
-          "keywords": ["unity", "ecs", "arch", "source-generator", "roslyn"],
-          "homepage": "https://github.com/mikhail-dcl/Arch.SystemGroups",
-          "bugs": {
-            "url": "https://github.com/mikhail-dcl/Arch.SystemGroups/issues"
-          },
-          "repository": {
-            "type": "git",
-            "url": "git+ssh://git@github.com/mikhail-dcl/Arch.SystemGroups.git"
-          },
-          "license": "APACHE 2.0",
-          "author": "mikhail-dcl (https://github.com/mikhail-dcl/)"
-        }
-        EOF
+        # Copy DLL
+        cp Arch.SystemGroups.SourceGenerator/bin/Release/netstandard2.0/Arch.SystemGroups.SourceGenerator.dll "$DLL_DIR/"
 
         # Create .meta file with RoslynAnalyzer configuration
-        cat > "$PACKAGE_DIR/Arch.SystemGroups.SourceGenerator.dll.meta" << 'EOF'
+        cat > "$DLL_DIR/Arch.SystemGroups.SourceGenerator.dll.meta" << 'EOF'
         fileFormatVersion: 2
         guid: a1b2c3d4e5f6789012345678901234ab
         labels:
@@ -102,66 +77,54 @@ jobs:
           assetBundleVariant:
         EOF
 
-        # Create tarball (UPM format)
-        tar -czf "com.arch.systemgroups.sourcegenerator-$PACKAGE_VERSION.tgz" -C "$PACKAGE_DIR" .
+        echo "✅ SourceGenerator DLL with Unity meta file prepared"
 
-        echo "✅ Unity package created: com.arch.systemgroups.sourcegenerator-$PACKAGE_VERSION.tgz"
-        echo "PACKAGE_VERSION=$PACKAGE_VERSION" >> $GITHUB_ENV
-        echo "PACKAGE_FILE=com.arch.systemgroups.sourcegenerator-$PACKAGE_VERSION.tgz" >> $GITHUB_ENV
-
-    - name: Upload SourceGenerator Unity Package
+    - name: Upload SourceGenerator DLL
       uses: actions/upload-artifact@v4
       with:
-        name: com.arch.systemgroups.sourcegenerator-PR${{ github.event.pull_request.number }}-run${{ github.run_number }}
-        path: com.arch.systemgroups.sourcegenerator-*.tgz
+        name: SourceGenerator-DLL-PR${{ github.event.pull_request.number }}-run${{ github.run_number }}
+        path: SourceGenerator-Artifact/
         retention-days: 30
 
     - name: Comment on PR with artifact link
       uses: actions/github-script@v7
       with:
         script: |
-          const packageName = `com.arch.systemgroups.sourcegenerator-PR${{ github.event.pull_request.number }}-run${{ github.run_number }}`;
-          const packageVersion = `1.0.0-pr.${{ github.event.pull_request.number }}.run${{ github.run_number }}`;
+          const artifactName = `SourceGenerator-DLL-PR${{ github.event.pull_request.number }}-run${{ github.run_number }}`;
           const runId = context.runId;
           const runNumber = '${{ github.run_number }}';
           const repo = context.repo;
 
-          const comment = `## ✅ SourceGenerator Unity Package Built Successfully
+          const comment = `## ✅ SourceGenerator DLL Built Successfully
 
-          The SourceGenerator has been packaged as a Unity Package Manager (UPM) compatible package.
+          The SourceGenerator DLL has been built and is ready for testing in Unity.
 
-          **📦 Package:** \`com.arch.systemgroups.sourcegenerator\` v${packageVersion}
-
-          ### 🔗 Download Package:
+          ### 🔗 Download:
           [View Workflow Run and Download Artifact](https://github.com/${repo.owner}/${repo.repo}/actions/runs/${runId})
 
-          ### 📥 Installation in Unity:
+          ### 📥 Installation in Unity (Quick - One extraction):
 
-          #### Option 1: Manual Installation (Tarball)
-          1. Download the artifact from the link above (requires GitHub login)
-          2. Extract the outer zip to get \`com.arch.systemgroups.sourcegenerator-${packageVersion}.tgz\`
-          3. In Unity, go to **Window → Package Manager**
-          4. Click **+ → Add package from tarball...**
-          5. Select the downloaded \`.tgz\` file
+          1. **Download** the artifact from the link above (requires GitHub login)
+          2. **Extract once** - you'll get:
+             - \`Arch.SystemGroups.SourceGenerator.dll\`
+             - \`Arch.SystemGroups.SourceGenerator.dll.meta\` (configured as RoslynAnalyzer)
+          3. **Copy both files** to your Unity project (e.g., \`Assets/Plugins/RoslynAnalyzers/\` or anywhere in Assets)
+          4. Unity will automatically detect it as a Roslyn Analyzer and use it for code generation
 
-          #### Option 2: Local Installation
-          1. Extract the tarball to your Unity project's \`Packages/\` folder
-          2. Unity will auto-detect and install the package
-
-          ### 📋 Package Contents:
-          - **SourceGenerator DLL** with proper Unity meta configuration
-          - Configured as **RoslynAnalyzer** for automatic code generation
-          - Compatible with Unity 2022.3+
+          ### 📋 What You Get:
+          - ✅ SourceGenerator DLL (netstandard2.0)
+          - ✅ Unity .meta file with RoslynAnalyzer label
+          - ✅ Ready for immediate use in Unity 2022.3+
 
           ### ℹ️ For Production Use:
-          Use releases instead of PR artifacts for stable versions. PR packages are for testing only.
+          Use [releases](https://github.com/${repo.owner}/${repo.repo}/releases) instead of PR artifacts.
+          Releases provide a complete UPM package (\`.tgz\`) that can be referenced via URL.
 
           **Build Details:**
-          - Package: \`com.arch.systemgroups.sourcegenerator\`
-          - Version: \`${packageVersion}\`
           - Configuration: Release
           - Target Framework: netstandard2.0
-          - Workflow Run: [#${runId}](https://github.com/${repo.owner}/${repo.repo}/actions/runs/${runId})
+          - PR: #${{ github.event.pull_request.number }}
+          - Run: [#${runId}](https://github.com/${repo.owner}/${repo.repo}/actions/runs/${runId})
           `;
 
           // Check if we already commented
@@ -173,7 +136,7 @@ jobs:
 
           const botComment = comments.find(comment =>
             comment.user.type === 'Bot' &&
-            comment.body.includes('SourceGenerator Unity Package Built Successfully')
+            comment.body.includes('SourceGenerator DLL Built Successfully')
           );
 
           if (botComment) {
