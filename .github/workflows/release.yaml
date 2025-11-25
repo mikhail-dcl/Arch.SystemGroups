@@ -48,6 +48,81 @@ jobs:
     - name: Build SourceGenerator (Release)
       run: dotnet build Arch.SystemGroups.SourceGenerator/Arch.SystemGroups.SourceGenerator.csproj --configuration Release --no-restore
 
+    - name: Create SourceGenerator Unity Package
+      run: |
+        PACKAGE_DIR="com.arch.systemgroups.sourcegenerator"
+        # Remove 'v' prefix from version if present
+        PACKAGE_VERSION="${{ github.event.inputs.version }}"
+        PACKAGE_VERSION="${PACKAGE_VERSION#v}"
+
+        # Create package directory
+        mkdir -p "$PACKAGE_DIR"
+
+        # Copy SourceGenerator DLL
+        cp Arch.SystemGroups.SourceGenerator/bin/Release/netstandard2.0/Arch.SystemGroups.SourceGenerator.dll "$PACKAGE_DIR/"
+
+        # Create package.json
+        cat > "$PACKAGE_DIR/package.json" << EOF
+        {
+          "name": "com.arch.systemgroups.sourcegenerator",
+          "displayName": "Arch.SystemGroups SourceGenerator",
+          "version": "$PACKAGE_VERSION",
+          "unity": "2022.3",
+          "description": "Source Generator for Arch.SystemGroups - generates boilerplate code for ECS systems",
+          "keywords": ["unity", "ecs", "arch", "source-generator", "roslyn"],
+          "homepage": "https://github.com/mikhail-dcl/Arch.SystemGroups",
+          "bugs": {
+            "url": "https://github.com/mikhail-dcl/Arch.SystemGroups/issues"
+          },
+          "repository": {
+            "type": "git",
+            "url": "git+ssh://git@github.com/mikhail-dcl/Arch.SystemGroups.git"
+          },
+          "license": "APACHE 2.0",
+          "author": "mikhail-dcl (https://github.com/mikhail-dcl/)"
+        }
+        EOF
+
+        # Create .meta file with RoslynAnalyzer configuration
+        cat > "$PACKAGE_DIR/Arch.SystemGroups.SourceGenerator.dll.meta" << 'EOF'
+        fileFormatVersion: 2
+        guid: a1b2c3d4e5f6789012345678901234ab
+        labels:
+        - RoslynAnalyzer
+        PluginImporter:
+          externalObjects: {}
+          serializedVersion: 2
+          iconMap: {}
+          executionOrder: {}
+          isPreloaded: 0
+          isOverridable: 0
+          isExplicitlyReferenced: 0
+          platformData:
+          - first:
+              Editor: Editor
+            second:
+              enabled: 1
+              settings:
+                CPU: AnyCPU
+                DefaultValueInitialized: true
+                OS: AnyOS
+          - first:
+              Any:
+            second:
+              enabled: 0
+              settings: {}
+          userData:
+          assetBundleName:
+          assetBundleVariant:
+        EOF
+
+        # Create tarball (UPM format)
+        tar -czf "com.arch.systemgroups.sourcegenerator-$PACKAGE_VERSION.tgz" -C "$PACKAGE_DIR" .
+
+        echo "✅ Unity package created: com.arch.systemgroups.sourcegenerator-$PACKAGE_VERSION.tgz"
+        echo "PACKAGE_VERSION=$PACKAGE_VERSION" >> $GITHUB_ENV
+        echo "PACKAGE_FILE=com.arch.systemgroups.sourcegenerator-$PACKAGE_VERSION.tgz" >> $GITHUB_ENV
+
     - name: Run Tests
       run: dotnet test --configuration Release --no-restore --logger trx --results-directory "TestResults"
 
@@ -175,6 +250,21 @@ jobs:
 
           console.log('SourceGenerator DLL uploaded successfully');
 
+          // Upload the Unity Package as a release asset
+          const packageFile = process.env.PACKAGE_FILE;
+          const packageContent = fs.readFileSync(packageFile);
+
+          await github.rest.repos.uploadReleaseAsset({
+            owner: repo.owner,
+            repo: repo.repo,
+            release_id: release.id,
+            name: packageFile,
+            data: packageContent,
+          });
+
+          console.log('Unity Package uploaded successfully');
+          console.log(`📦 Unity Package URL: ${release.html_url.replace('/tag/', '/download/')}/${packageFile}`);
+
           // Also create a summary
           await core.summary
             .addHeading('Release Created Successfully! 🎉')
@@ -184,6 +274,10 @@ jobs:
             .addList([
               `Version: ${{ github.event.inputs.version }}`,
               `Pre-release: ${{ github.event.inputs.prerelease }}`,
-              `Assets: Arch.SystemGroups.SourceGenerator.dll`
+              `Assets: Arch.SystemGroups.SourceGenerator.dll, ${packageFile}`
             ])
+            .addRaw('\n\n')
+            .addHeading('Unity Package Manager Installation', 3)
+            .addRaw(`\n\nTo install the SourceGenerator in Unity, add this URL to Package Manager:\n\n`)
+            .addCodeBlock(`${release.html_url.replace('/tag/', '/download/')}/${packageFile}`, 'text')
             .write();
