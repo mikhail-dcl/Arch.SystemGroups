@@ -36,42 +36,95 @@ jobs:
     - name: Build SourceGenerator (Release)
       run: dotnet build Arch.SystemGroups.SourceGenerator/Arch.SystemGroups.SourceGenerator.csproj --configuration Release --no-restore
 
+    - name: Prepare SourceGenerator DLL with Unity Meta
+      run: |
+        DLL_DIR="SourceGenerator-Artifact"
+        mkdir -p "$DLL_DIR"
+
+        # Copy DLL
+        cp Arch.SystemGroups.SourceGenerator/bin/Release/netstandard2.0/Arch.SystemGroups.SourceGenerator.dll "$DLL_DIR/"
+
+        # Create .meta file with RoslynAnalyzer configuration
+        cat > "$DLL_DIR/Arch.SystemGroups.SourceGenerator.dll.meta" << 'EOF'
+        fileFormatVersion: 2
+        guid: a1b2c3d4e5f6789012345678901234ab
+        labels:
+        - RoslynAnalyzer
+        PluginImporter:
+          externalObjects: {}
+          serializedVersion: 2
+          iconMap: {}
+          executionOrder: {}
+          isPreloaded: 0
+          isOverridable: 0
+          isExplicitlyReferenced: 0
+          platformData:
+          - first:
+              Editor: Editor
+            second:
+              enabled: 1
+              settings:
+                CPU: AnyCPU
+                DefaultValueInitialized: true
+                OS: AnyOS
+          - first:
+              Any:
+            second:
+              enabled: 0
+              settings: {}
+          userData:
+          assetBundleName:
+          assetBundleVariant:
+        EOF
+
+        echo "✅ SourceGenerator DLL with Unity meta file prepared"
+
     - name: Upload SourceGenerator DLL
       uses: actions/upload-artifact@v4
       with:
-        name: Arch.SystemGroups.SourceGenerator-PR${{ github.event.pull_request.number }}-run${{ github.run_number }}
-        path: Arch.SystemGroups.SourceGenerator/bin/Release/netstandard2.0/Arch.SystemGroups.SourceGenerator.dll
+        name: SourceGenerator-DLL-PR${{ github.event.pull_request.number }}-run${{ github.run_number }}
+        path: SourceGenerator-Artifact/
         retention-days: 30
 
     - name: Comment on PR with artifact link
       uses: actions/github-script@v7
       with:
         script: |
-          const artifactName = `Arch.SystemGroups.SourceGenerator-PR${{ github.event.pull_request.number }}-run${{ github.run_number }}`;
+          const artifactName = `SourceGenerator-DLL-PR${{ github.event.pull_request.number }}-run${{ github.run_number }}`;
           const runId = context.runId;
           const runNumber = '${{ github.run_number }}';
           const repo = context.repo;
 
           const comment = `## ✅ SourceGenerator DLL Built Successfully
 
-          The SourceGenerator DLL has been built in Release mode and is available for download.
+          The SourceGenerator DLL has been built and is ready for testing in Unity.
 
-          **📦 Download:** [${artifactName}](https://github.com/${repo.owner}/${repo.repo}/actions/runs/${runId})
+          ### 🔗 Download:
+          [View Workflow Run and Download Artifact](https://github.com/${repo.owner}/${repo.repo}/actions/runs/${runId})
 
-          ### How to Download:
-          1. Click the link above (requires GitHub login)
-          2. Scroll to the "Artifacts" section at the bottom
-          3. Click the artifact name to download
-          4. **Extract the zip file** to get the DLL (GitHub artifacts are automatically zipped)
+          ### 📥 Installation in Unity (Quick - One extraction):
 
-          > **Note:** PR artifacts are zipped by GitHub. For direct DLL downloads without extraction, use the [Release workflow](https://github.com/${repo.owner}/${repo.repo}/actions/workflows/release.yaml) which attaches DLLs directly to releases.
+          1. **Download** the artifact from the link above (requires GitHub login)
+          2. **Extract once** - you'll get:
+             - \`Arch.SystemGroups.SourceGenerator.dll\`
+             - \`Arch.SystemGroups.SourceGenerator.dll.meta\` (configured as RoslynAnalyzer)
+          3. **Copy both files** to your Unity project (e.g., \`Assets/Plugins/RoslynAnalyzers/\` or anywhere in Assets)
+          4. Unity will automatically detect it as a Roslyn Analyzer and use it for code generation
+
+          ### 📋 What You Get:
+          - ✅ SourceGenerator DLL (netstandard2.0)
+          - ✅ Unity .meta file with RoslynAnalyzer label
+          - ✅ Ready for immediate use in Unity 2022.3+
+
+          ### ℹ️ For Production Use:
+          Use [releases](https://github.com/${repo.owner}/${repo.repo}/releases) instead of PR artifacts.
+          Releases provide a complete UPM package (\`.tgz\`) that can be referenced via URL.
 
           **Build Details:**
           - Configuration: Release
           - Target Framework: netstandard2.0
-          - DLL: \`Arch.SystemGroups.SourceGenerator.dll\`
-          - Workflow Run: [#${runId}](https://github.com/${repo.owner}/${repo.repo}/actions/runs/${runId})
-          - Run Number: ${runNumber}
+          - PR: #${{ github.event.pull_request.number }}
+          - Run: [#${runId}](https://github.com/${repo.owner}/${repo.repo}/actions/runs/${runId})
           `;
 
           // Check if we already commented
